@@ -1,30 +1,65 @@
 <?php
 
-namespace DAOs\aviso;
+namespace DAOs\credenciais;
 
+use DAOs\DAO;
 use model\credenciais\Credenciais;
+use \PDO;
 
-abstract class CredenciaisDAO
+class CredenciaisDAO extends DAO
 {
 
-    public function insert(Credenciais $model): Credenciais
+    public function insert(Credenciais $model): Credenciais|bool
     {
-        return $model;
+        $query = "INSERT INTO credenciais (usuario, senha, last_login, ativo)
+        VALUES (?, ?, ?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->usuario);
+        $stmt->bindValue(2, $model->senha);
+        $stmt->bindValue(3, $model->last_login);
+        $stmt->bindValue(4, $model->ativo);
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(Credenciais $model): Credenciais
+    public function update(Credenciais $model): Credenciais|bool
     {
-        return $model;
+        $query = "UPDATE credenciais SET
+                  usuario = ?,
+                  senha = ?,
+                  last_login = ?,
+                  ativo = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->usuario);
+        $stmt->bindValue(2, $model->senha);
+        $stmt->bindValue(3, $model->last_login);
+        $stmt->bindValue(4, $model->ativo);
+        $stmt->bindValue(5, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM credenciais WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+
+        return $stmt->execute();
     }
-    public static function get(Credenciais $model): Credenciais
+    public function get(int $id): Credenciais|bool
     {
-        return $model;
+        $query = "SELECT * FROM credenciais WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(Credenciais::class);
+
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM credenciais;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Credenciais::class);
     }
 }

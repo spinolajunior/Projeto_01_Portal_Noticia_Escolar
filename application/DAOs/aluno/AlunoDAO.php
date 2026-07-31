@@ -3,28 +3,63 @@
 namespace DAOs\aluno;
 
 use model\aluno\Aluno;
+use DAOS\DAO;
+use \PDO;
 
-abstract class AlunoDAO
+class AlunoDAO extends DAO
 {
 
-    public function insert(Aluno $model): Aluno
+    public function insert(Aluno $model): Aluno|bool
     {
-        return $model;
+        $query = "INSERT INTO aluno (nome, matricula, data_nascimento, serie, id_credenciais)
+        VALUES (?, ?, ?, ?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->nome);
+        $stmt->bindValue(2, $model->matricula);
+        $stmt->bindValue(3, $model->data_nascimento);
+        $stmt->bindValue(4, $model->serie);
+        $stmt->bindValue(5, $model->id_credenciais);
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(Aluno $model): Aluno
+    public function update(Aluno $model): Aluno|bool
     {
-        return $model;
+        $query = "UPDATE aluno SET
+                  nome = ?,
+                  matricula = ?,
+                  data_nascimento = ?,
+                  serie = ?,
+                  id_credenciais = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->nome);
+        $stmt->bindValue(2, $model->matricula);
+        $stmt->bindValue(3, $model->data_nascimento);
+        $stmt->bindValue(4, $model->serie);
+        $stmt->bindValue(5, $model->id_credenciais);
+        $stmt->bindValue(6, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM aluno WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        return $stmt->execute();
     }
-    public static function get(Aluno $model): Aluno
+    public function get(int $id): Aluno|bool
     {
-        return $model;
+        $query = "SELECT * FROM aluno WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(Aluno::class);
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM aluno;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Aluno::class);
     }
 }

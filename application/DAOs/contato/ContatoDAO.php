@@ -3,28 +3,56 @@
 namespace DAOs\contato;
 
 use model\contato\Contato;
+use DAOs\DAO;
+use \PDO;
 
-abstract class ContatoDAO
+
+class ContatoDAO extends DAO
 {
 
-    public function insert(Contato $model): Contato
+    public function insert(Contato $model): Contato|bool
     {
-        return $model;
+        $query = "INSERT INTO contato (tel, email)
+                  VALUES (?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->tel);
+        $stmt->bindValue(2, $model->email);
+        
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(Contato $model): Contato
+    public function update(Contato $model): Contato|bool
     {
-        return $model;
+        $query = "UPDATE contato SET
+                  tel = ?,
+                  email = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->tel);
+        $stmt->bindValue(2, $model->email);
+        $stmt->bindValue(3, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM contato WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        return $stmt->execute();
     }
-    public static function get(Contato $model): Contato
+    public function get(int $id): Contato|bool
     {
-        return $model;
+        $query = "SELECT * FROM contato WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(Contato::class);
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM contato;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Contato::class);
     }
 }

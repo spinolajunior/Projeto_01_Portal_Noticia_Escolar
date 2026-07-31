@@ -1,6 +1,6 @@
 <?php
 
-namespace model\Aviso;
+namespace model\aviso;
 
 final class Aviso{
 
@@ -11,7 +11,7 @@ final class Aviso{
     public string $validade;
     public int $prioridade;
     public bool $status;
-    public ?int $id_admnistrador = null;
+    public ?int $id_administrador = null;
 
 
 }
