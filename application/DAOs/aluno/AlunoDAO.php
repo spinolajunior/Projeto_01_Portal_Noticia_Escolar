@@ -62,4 +62,14 @@ class AlunoDAO extends DAO
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_CLASS, Aluno::class);
     }
+
+    public function idCredConf(int $id): bool|Aluno{
+       $query = "SELECT * FROM aluno where id_credenciais = ?;";
+       $stmt = $this->pdo->prepare($query);
+       $stmt->bindValue(1, $id);
+       $stmt->execute();
+       $aluno = $stmt->fetchObject(Aluno::class);
+       return $aluno !== false ? $aluno : false;
+
+    }
 }

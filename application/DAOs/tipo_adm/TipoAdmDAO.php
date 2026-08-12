@@ -3,28 +3,57 @@
 namespace DAOs\tipo_adm;
 
 use model\tipo_adm\TipoAdm;
+use DAOs\DAO;
+use \PDO;
 
-abstract class TipoAdmDAO
+class TipoAdmDAO extends DAO
 {
 
-    public static function insert(TipoAdm $model): TipoAdm
+    public function insert(TipoAdm $model): TipoAdm|bool
     {
-        return $model;
+        $query = "INSERT INTO tipo_adm (cargo, nivel_acesso)
+        VALUES (?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->cargo);
+        $stmt->bindValue(2, $model->nivel_acesso);
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(TipoAdm $model): TipoAdm
+    public function update(TipoAdm $model): TipoAdm|bool
     {
-        return $model;
+        $query = "UPDATE tipo_adm SET
+                  cargo = ?,
+                  nivel_acesso = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->cargo);
+        $stmt->bindValue(2, $model->nivel_acesso);
+        $stmt->bindValue(3, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM tipo_adm WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+
+        return $stmt->execute();
     }
-    public static function get(TipoAdm $model): TipoAdm
+    public function get(int $id): TipoAdm|bool
     {
-        return $model;
+        $query = "SELECT * FROM tipo_adm WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(TipoAdm::class);
+
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM tipo_adm;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_CLASS, TipoAdm::class);
     }
 }

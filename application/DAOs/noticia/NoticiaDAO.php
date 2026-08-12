@@ -3,28 +3,86 @@
 namespace DAOs\noticia;
 
 use model\noticia\Noticia;
+use DAOS\DAO;
+use \PDO;
 
-abstract class NoticiaDAO
+class NoticiaDAO extends DAO
 {
 
-    public static function insert(Noticia $model): Noticia
+    public function insert(Noticia $model): Noticia|bool
     {
-        return $model;
+        $query = "INSERT INTO noticia (titulo, subtitulo, descricao, data_pub, status, id_administrador)
+        VALUES (?, ?, ?, ?, ?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->titulo);
+        $stmt->bindValue(2, $model->subtitulo);
+        $stmt->bindValue(3, $model->descricao);
+        $stmt->bindValue(4, $model->data_pub);
+        $stmt->bindValue(5, $model->status);
+        $stmt->bindValue(6, $model->id_administrador);
+
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(Noticia $model): Noticia
+    public function update(Noticia $model): Noticia|bool
     {
-        return $model;
+        $query = "UPDATE noticia SET
+                  titulo = ?,
+                  subtitulo = ?,
+                  descricao = ?,
+                  imagem = ?,
+                  data_pub = ?,
+                  status = ?,
+                  id_administrador = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->titulo);
+        $stmt->bindValue(2, $model->subtitulo);
+        $stmt->bindValue(3, $model->descricao);
+        $stmt->bindValue(4, $model->imagem);
+        $stmt->bindValue(5, $model->data_pub);
+        $stmt->bindValue(6, $model->status);
+        $stmt->bindValue(7, $model->id_administrador);
+        $stmt->bindValue(7, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM noticia WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+
+        return $stmt->execute();
     }
-    public static function get(Noticia $model): Noticia
+    public function get(int $id): Noticia|bool
     {
-        return $model;
+        $query = "SELECT * FROM noticia WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(Noticia::class);
+
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM noticia ORDER BY data_pub DESC;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Noticia::class);
+    }
+
+    public function setImg(Noticia $model): bool
+    {
+        $query = "UPDATE noticia SET 
+        imagem = ? 
+        WHERE id  = ?";
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->imagem);
+        $stmt->bindValue(2, $model->id);
+
+        return $stmt->execute();
+
     }
 }

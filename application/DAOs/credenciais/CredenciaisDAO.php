@@ -22,19 +22,32 @@ class CredenciaisDAO extends DAO
     }
     public function update(Credenciais $model): Credenciais|bool
     {
-        $query = "UPDATE credenciais SET
+        $consulta = $model->get();
+        if ($consulta->usuario !== $model->usuario or $consulta->senha !== $model->senha) {
+            echo "Passou";
+            var_dump($consulta);
+            $query = "UPDATE credenciais SET
                   usuario = ?,
                   senha = ?,
                   last_login = ?,
                   ativo = ?
                   WHERE id = ?;";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $model->usuario);
-        $stmt->bindValue(2, $model->senha);
-        $stmt->bindValue(3, $model->last_login);
-        $stmt->bindValue(4, $model->ativo);
-        $stmt->bindValue(5, $model->id);
-        return ($stmt->execute()) ? $this->get($model->id) : false;
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $model->usuario);
+            $stmt->bindValue(2, $model->senha);
+            $stmt->bindValue(3, $model->last_login);
+            $stmt->bindValue(4, $model->ativo);
+            $stmt->bindValue(5, $model->id);
+            return ($stmt->execute()) ? $this->get($model->id) : false;
+        } else {
+            $query = "UPDATE credenciais SET
+                  last_login = ?
+                  WHERE id = ?;";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $model->last_login);
+            $stmt->bindValue(2, $model->id);
+            return ($stmt->execute()) ? $this->get($model->id) : false;
+        }
     }
     public function delete(int $id): bool
     {
@@ -61,5 +74,15 @@ class CredenciaisDAO extends DAO
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_CLASS, Credenciais::class);
+    }
+    function logar(Credenciais $credencial): bool|Credenciais
+    {
+        $query = "SELECT * FROM credenciais WHERE usuario = ? AND Senha = sha2(?,256)  ";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $credencial->usuario);
+        $stmt->bindValue(2, $credencial->senha);
+        $stmt->execute();
+        $obj = $stmt->fetchObject(Credenciais::class);
+        return ($obj !== false) ? $obj : false;
     }
 }

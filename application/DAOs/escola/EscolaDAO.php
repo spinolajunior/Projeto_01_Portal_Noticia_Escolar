@@ -3,28 +3,69 @@
 namespace DAOs\escola;
 
 use model\escola\Escola;
+use \PDO;
+use DAOS\DAO;
 
-abstract class EscolaDAO
+class EscolaDAO extends DAO
 {
 
-    public static function insert(Escola $model): Escola
+    public function insert(Escola $model): Escola|bool
     {
-        return $model;
+        $query = "INSERT INTO escola (nome, cod_inep, ano_letivo, logo_img, id_contato, id_endereco)
+        VALUES (?, ?, ?, ?, ?, ?);";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->nome);
+        $stmt->bindValue(2, $model->cod_inep);
+        $stmt->bindValue(3, $model->ano_letivo);
+        $stmt->bindValue(4, $model->logo_img); 
+        $stmt->bindValue(5, $model->id_contato);
+        $stmt->bindValue(6, $model->id_endereco);
+        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public static function update(Escola $model): Escola
+    public function update(Escola $model): Escola|bool
     {
-        return $model;
+        $query = "UPDATE escola SET
+                  nome = ?,
+                  cod_inep = ?,
+                  ano_letivo = ?,
+                  logo_img = ?,
+                  id_contato = ?,
+                  id_endereco = ?
+                  WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $model->nome);
+        $stmt->bindValue(2, $model->cod_inep);
+        $stmt->bindValue(3, $model->ano_letivo);
+        $stmt->bindValue(4, $model->logo_img);
+        $stmt->bindValue(5, $model->id_contato);
+        $stmt->bindValue(6, $model->id_endereco);
+        $stmt->bindValue(7, $model->id);
+        return ($stmt->execute()) ? $this->get($model->id) : false;
     }
-    public static function delete(int $id): bool
+    public function delete(int $id): bool
     {
-        return true;
+        $query = "DELETE FROM escola WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+
+        return $stmt->execute();
     }
-    public static function get(Escola $model): Escola
+    public function get(int $id): Escola|bool
     {
-        return $model;
+        $query = "SELECT * FROM escola WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $model = $stmt->fetchObject(Escola::class);
+
+        return ($model !== false) ? $model : false;
     }
-    public static function getAll(): array
+    public function getAll(): array
     {
-        return [];
+        $query = "SELECT * FROM escola;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Escola::class);
     }
 }

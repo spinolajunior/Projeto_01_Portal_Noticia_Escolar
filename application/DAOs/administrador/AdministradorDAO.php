@@ -68,4 +68,14 @@ class AdministradorDAO extends DAO
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_CLASS, Administrador::class);
     }
+
+    public function idCredConf(int $id): bool|Administrador{
+       $query = "SELECT * FROM administrador where id_credenciais = ?;";
+       $stmt = $this->pdo->prepare($query);
+       $stmt->bindValue(1, $id);
+       $stmt->execute();
+       $administrador = $stmt->fetchObject(Administrador::class);
+       return $administrador!== false ? $administrador : false;
+
+    }
 }
