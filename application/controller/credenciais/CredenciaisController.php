@@ -79,12 +79,7 @@ abstract class CredenciaisController extends Controller
                 }
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            if (isset($_COOKIE['usuario']) && isset($_COOKIE['senha'])) {
-                $usuario = new Credenciais();
-                $usuario->usuario = $_COOKIE['email'];
-                $usuario->senha = $_COOKIE['senha'];
-            }
-
+            
             new View("Login", VIEW . "template/nav_footer_logado.php", VIEW . "include/forms/form_login.php", null)->renderizar();
         }
     }

@@ -4,7 +4,9 @@ namespace view;
 
 class View
 {
-
+    public static string $logado = VIEW . "template/Nav_footer_out.php";
+    public static string $out = VIEW . "template/Nav_footer_logado.php";
+    public static string $limpo = VIEW . "template/Limpo.php";
     public function __construct(
         public string $titulo,
         public ?string $base,
@@ -32,7 +34,7 @@ class View
         $content = ob_get_clean();
 
         if (file_exists($this->base)) {
-            
+
             include $this->base;
         } else {
             echo "<p>Erro: View base não encontrada ({$this->base})</p>";

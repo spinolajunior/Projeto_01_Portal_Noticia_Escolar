@@ -19,7 +19,7 @@ abstract class NoticiaController extends Controller
 
     public static function insert(): void
     {
-        self::logado();
+        self::logadoRedirect();
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['img']) && $_FILES['img']['error'] === UPLOAD_ERR_OK) {
             $model = new Noticia();
             $model->titulo = $_POST["titulo"];
@@ -58,33 +58,39 @@ abstract class NoticiaController extends Controller
     public static function get(): void
     {
         if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET["id"])) {
+
             $model = new Noticia();
             $model->id = (int)$_GET["id"];
             $model =  $model->get();
 
-            if (isset($_SESSION['usuario']) && isset($_SESSION['senha'])) {
 
-                if ($model !== false) {
-                    $adm = new Administrador();
-                    $adm->id = $model->id_administrador;
-                    $adm = $adm->get();
+            if ($model !== false) {
 
-                    new View(
-                        $model->titulo,
-                        VIEW . "template/Nav_footer_out.php",
-                        VIEW . "include/Noticia_id.php",
-                        [
-                            "noticia" => $model,
-                            "adm" => $adm
-                        ]
-                    )->renderizar();
-                } else {
-                    header("location: /");
-                    exit;
-                }
+                $adm = new Administrador();
+                $adm->id = $model->id_administrador;
+                $adm = $adm->get();
+
+                new View(
+                    $model->titulo,
+                    VIEW . (self::logado() ? "template/Nav_footer_out.php" : "template/Nav_footer_logado.php"),
+                    VIEW . "include/Noticia_id.php",
+                    [
+                        "noticia" => $model,
+                        "adm" => $adm
+                    ]
+                )->renderizar();
             } else {
-                new View($model->titulo, VIEW . "template/Nav_footer_logado.php", VIEW . "include/Noticia_id.php", ["noticia" => $model])->renderizar();
+                
+                new View(
+                    '404 PAGINA NÃO ENCONTRADA!',
+                    VIEW . (self::logado() ? "template/Nav_footer_out.php" : "template/Nav_footer_logado.php"),
+                    VIEW . "include/Error_404.php",
+                    null
+                )->renderizar();
             }
+        } else {
+            header("Location: /");
+            exit;
         }
     }
 }

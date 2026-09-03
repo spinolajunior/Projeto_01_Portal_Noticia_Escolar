@@ -16,12 +16,20 @@ abstract class Controller
         include VIEW . $view . '.php';
     }
 
-    public static function logado()
+    public static function logadoRedirect()
     {
         if (!isset($_SESSION["usuario"]) && !isset($_SESSION["senha"])) {
             header('location: /login');
             exit;
         }
+    }
+    public static function logado(): bool
+    {
+
+        if (isset($_SESSION["usuario"]) && isset($_SESSION["senha"]))
+            return true;
+        else
+            return false;
     }
 
     public static function attDateTimeLogin(array $sessao): void

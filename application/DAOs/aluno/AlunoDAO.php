@@ -19,7 +19,7 @@ class AlunoDAO extends DAO
         $stmt->bindValue(3, $model->data_nascimento);
         $stmt->bindValue(4, $model->serie);
         $stmt->bindValue(5, $model->id_credenciais);
-        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
+        return ($stmt->execute()) ? $this->getById((int)$this->pdo->lastInsertId()) : false;
     }
     public function update(Aluno $model): Aluno|bool
     {
@@ -37,7 +37,7 @@ class AlunoDAO extends DAO
         $stmt->bindValue(4, $model->serie);
         $stmt->bindValue(5, $model->id_credenciais);
         $stmt->bindValue(6, $model->id);
-        return ($stmt->execute()) ? $this->get($model->id) : false;
+        return ($stmt->execute()) ? $this->getById($model->id) : false;
     }
     public function delete(int $id): bool
     {
@@ -46,7 +46,7 @@ class AlunoDAO extends DAO
         $stmt->bindValue(1, $id);
         return $stmt->execute();
     }
-    public function get(int $id): Aluno|bool
+    public function getById(int $id): Aluno|bool
     {
         $query = "SELECT * FROM aluno WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
@@ -55,7 +55,7 @@ class AlunoDAO extends DAO
         $model = $stmt->fetchObject(Aluno::class);
         return ($model !== false) ? $model : false;
     }
-    public function getAll(): array
+    public function get(): array
     {
         $query = "SELECT * FROM aluno;";
         $stmt = $this->pdo->prepare($query);

@@ -1,10 +1,9 @@
 <?php
 
-use controller\Controller;
 use controller\credenciais\CredenciaisController;
 use controller\HomeController;
-use controller\LoginController;
 use controller\noticia\NoticiaController;
+use controller\aluno\AlunoController;
 
 $uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
@@ -23,34 +22,46 @@ switch ($uri) {
         CredenciaisController::logout();
         break;
 
-    case "/noticia":
+    case "/noticias":
         NoticiaController::get();
         break;
     case "/noticia/cadastro":
         NoticiaController::insert();
         break;
 
-    case "/eventos":
-        include VIEW . "evento/Eventos.php";
+    case "/noticia/edit":
+        NoticiaController::insert();
         break;
 
-    case "/evento":
+    case "/eventos":
         include VIEW . "evento/Evento.php";
         break;
 
-    case "/comunicados":
-        include VIEW . "comunicado/Comunicados.php";
+    case "/evento/cadastro":
+        include VIEW . "evento/Evento.php";
+        break;
+    case "/evento/edit":
+        include VIEW . "evento/Evento.php";
         break;
 
-    case "/comunicado":
-        include VIEW . "comunicado/Comunicado.php";
+    case "/avisos":
+        include VIEW . "comunicado/Comunicados.php";
+        break;
+    case "/aviso/cadastro":
+        include VIEW . "comunicado/Comunicados.php";
+        break;
+    case "/aviso/edit":
+        include VIEW . "comunicado/Comunicados.php";
         break;
 
     case "/contato":
         include VIEW . "contato/Contato.php";
         break;
 
-    case "/perfil":
+    case "/perfil/aluno":
+        AlunoController::getById();
+        break;
+    case "/perfil/administrador":
         include VIEW . "perfil/Perfil.php";
         break;
     default:
