@@ -7,6 +7,7 @@ use DAOs\aluno\AlunoDAO;
 final class Aluno
 {
     public ?int $id = null;
+    public ?string $foto = null;
     public string $nome;
     public string $matricula;
     public string $data_nascimento;
@@ -15,11 +16,11 @@ final class Aluno
 
     public function get(): Aluno|bool
     {
-        return new AlunoDAO()->get($this->id);
+        return new AlunoDAO()->getById($this->id);
     }
     public function getAll(): array
     {
-        return new AlunoDAO()->getAll();
+        return new AlunoDAO()->get();
     }
     public function update(): Aluno|bool
     {

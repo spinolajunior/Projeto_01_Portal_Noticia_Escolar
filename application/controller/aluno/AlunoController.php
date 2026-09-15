@@ -25,9 +25,24 @@ abstract class AlunoController extends Controller
     }
 
 
-    public static function insert(): void {}
+    public static function insert(): void {
 
-    public static function update(): void {}
+        self::logadoRedirect();
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+
+        }elseif($_SERVER['REQUEST_METHOD'] === 'GET'){
+        new View("CADASTRO ALUNO",View::$logado,VIEW."include/forms/create/cadastrar_aluno.php",null)->renderizar();
+        }else{
+            http_response_code(405);
+            header("Location: /login");
+            exit;
+        }
+    }
+
+    public static function update(): void {
+        self::logadoRedirect();
+        new View("ATUALIZAR ALUNO!",View::$logado,VIEW."include/forms/update/update_adm.php",null)->renderizar();
+    }
 
     public static function delete(): void {}
 }

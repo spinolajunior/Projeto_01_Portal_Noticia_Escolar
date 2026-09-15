@@ -80,7 +80,7 @@ abstract class CredenciaisController extends Controller
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
             
-            new View("Login", VIEW . "template/nav_footer_logado.php", VIEW . "include/forms/form_login.php", null)->renderizar();
+            new View("Login", VIEW . "template/nav_footer_logado.php", VIEW . "include/forms/post/form_login.php", null)->renderizar();
         }
     }
 

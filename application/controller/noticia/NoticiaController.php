@@ -52,7 +52,7 @@ abstract class NoticiaController extends Controller
                 }
             }
         }
-        new View("Cadastrar Noticia", VIEW . "template/Nav_footer_out.php", VIEW . "include/forms/Cadastrar_noticia.php", null)->renderizar();
+        new View("Cadastrar Noticia", VIEW . "template/Nav_footer_out.php", VIEW . "include/forms/create/Cadastrar_noticia.php", null)->renderizar();
     }
 
     public static function get(): void

@@ -7,6 +7,8 @@ use DAOS\administrador\AdministradorDAO;
 final class Administrador
 {
     public ?int $id = null;
+
+    public ?string $foto = null;
     public string $nome;
     public string $matricula;
     public string $cpf;

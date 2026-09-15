@@ -34,7 +34,7 @@
 
                     <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
 
-                        <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem)?>.jpg"
+                        <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem) ?>.jpg"
                             class="d-block w-100"
                             style="height:420px; object-fit:cover;">
 
@@ -59,7 +59,7 @@
                                 ) ?>...
                             </p>
 
-                            <a href="/noticia?id=<?= $noticia->id ?>"
+                            <a href="/noticias?id=<?= $noticia->id ?>"
                                 class="btn btn-primary">
                                 Leia Mais
                             </a>
@@ -124,7 +124,7 @@
                             <div class="card h-100 shadow-sm">
 
 
-                                <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem)?>.jpg"
+                                <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem) ?>.jpg"
                                     class="card-img-top"
                                     style="height:180px; object-fit:cover;">
 
@@ -160,7 +160,7 @@
 
                                 <div class="card-footer bg-white border-0">
 
-                                    <a href="/noticia?id=<?= $noticia->id ?>"
+                                    <a href="/noticias?id=<?= $noticia->id ?>"
                                         class="btn btn-primary btn-sm">
 
                                         Leia Mais
