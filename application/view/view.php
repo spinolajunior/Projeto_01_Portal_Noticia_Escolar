@@ -4,9 +4,13 @@ namespace view;
 
 class View
 {
-    public static string $logado = VIEW . "template/Nav_footer_out.php";
-    public static string $out = VIEW . "template/Nav_footer_logado.php";
-    public static string $limpo = VIEW . "template/Limpo.php";
+    public static string $nav_footer = VIEW . "template/nav_footer.php";
+    public static string $limpo = VIEW . "template/limpo.php";
+    public static string $dinamico = VIEW . "include/pages/dinamico/";
+    public static string $dinamicoPaineis = VIEW . "include/pages/dinamico/paineis/";
+    public static string $estatico = VIEW . "include/pages/estatico/";
+    public static string $formPost = VIEW."/include/forms/post/";
+
     public function __construct(
         public string $titulo,
         public ?string $base,

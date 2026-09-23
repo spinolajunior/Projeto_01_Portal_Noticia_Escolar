@@ -9,7 +9,7 @@
                 </div>
 
                 <!-- Formulário -->
-                <form action="/login" method="post">
+                <form action="<?=isset($_GET['next_url'])?"/login?next_url=".$_GET['next_url']:"/login"  ?>" method="post">
 
                     <!-- Campo Usuário -->
                     <div class="mb-3">

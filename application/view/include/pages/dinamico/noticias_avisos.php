@@ -34,7 +34,7 @@
 
                     <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
 
-                        <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem) ?>.jpg"
+                        <img src="<?= htmlspecialchars($noticia->imagem) ?>.jpg"
                             class="d-block w-100"
                             style="height:420px; object-fit:cover;">
 
@@ -124,7 +124,7 @@
                             <div class="card h-100 shadow-sm">
 
 
-                                <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem) ?>.jpg"
+                                <img src="<?= htmlspecialchars($noticia->imagem) ?>.jpg"
                                     class="card-img-top"
                                     style="height:180px; object-fit:cover;">
 

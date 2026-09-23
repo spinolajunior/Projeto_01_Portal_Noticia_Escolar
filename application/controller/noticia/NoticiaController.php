@@ -3,15 +3,17 @@
 namespace controller\noticia;
 
 use controller\Controller;
+use controller\LoginController;
 use model\Administrador\Administrador;
 use model\Noticia\Noticia;
 use view\View;
-use Exception;
+
 
 abstract class NoticiaController extends Controller
 {
     public static function getALL(): bool|array
     {
+
         $model = new Noticia()->getAll();
 
         return count($model) > 0 ? $model : false;
@@ -19,7 +21,7 @@ abstract class NoticiaController extends Controller
 
     public static function insert(): void
     {
-        self::logadoRedirect();
+        LoginController::logadoRedirect("/cadastro/noticia");
         if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['img']) && $_FILES['img']['error'] === UPLOAD_ERR_OK) {
             $model = new Noticia();
             $model->titulo = $_POST["titulo"];
@@ -72,19 +74,19 @@ abstract class NoticiaController extends Controller
 
                 new View(
                     $model->titulo,
-                    VIEW . (self::logado() ? "template/Nav_footer_out.php" : "template/Nav_footer_logado.php"),
-                    VIEW . "include/Noticia_id.php",
+                    View::$nav_footer,
+                    View::$dinamico . "noticia_id.php",
                     [
                         "noticia" => $model,
                         "adm" => $adm
                     ]
                 )->renderizar();
             } else {
-                
+
                 new View(
                     '404 PAGINA NÃO ENCONTRADA!',
-                    VIEW . (self::logado() ? "template/Nav_footer_out.php" : "template/Nav_footer_logado.php"),
-                    VIEW . "include/Error_404.php",
+                    View::$nav_footer,
+                    View::$estatico."error_404.php",
                     null
                 )->renderizar();
             }
@@ -92,5 +94,11 @@ abstract class NoticiaController extends Controller
             header("Location: /");
             exit;
         }
+    }
+
+    public static function painelNoticia()
+    {
+        LoginController::logadoRedirect("/painel/noticia");
+        new View("Painel Gerenciamento Notícia!", View::$nav_footer, View::$dinamicoPaineis . "painel_noticia.php", null)->renderizar();
     }
 }

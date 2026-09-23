@@ -1,6 +1,8 @@
 <?php 
 $noticia = $model["noticia"];
-$adm = $model["adm"] ?>
+$adm = $model["adm"] 
+
+?>
 
 <main class="container my-5">
     <div class="row justify-content-center">
@@ -38,7 +40,7 @@ $adm = $model["adm"] ?>
                 <hr class="mb-4">
 
                 <!-- Imagem -->
-                <img src="view/img/upload/<?= htmlspecialchars($noticia->imagem)?>.jpg"
+                <img src="/<?=htmlspecialchars($noticia->imagem)?>.jpg"
                     class="img-fluid rounded shadow-sm w-100 mb-4"
                     style="max-height:400px; object-fit:cover;">
 

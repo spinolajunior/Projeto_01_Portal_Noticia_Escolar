@@ -1,11 +1,13 @@
 <?php
 
-use controller\credenciais\CredenciaisController;
 use controller\HomeController;
 use controller\noticia\NoticiaController;
 use controller\aluno\AlunoController;
 use controller\administrador\AdministradorController;
-use model\Administrador\Administrador;
+use controller\aviso\AvisoController;
+use controller\evento\EventoController;
+use controller\UsuarioController;
+use controller\LoginController;
 
 $uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
@@ -16,13 +18,18 @@ switch ($uri) {
         break;
 
     case "/login":
-        CredenciaisController::logar();
+        LoginController::logar();
         break;
 
     case "/logout":
-        CredenciaisController::logout();
+        LoginController::logout();
         break;
-
+    case "/painel/noticia_evento_aviso":
+        HomeController::paginaNoticiaEventoAviso();
+        break;
+    case "/painel/gerenciamento":
+        HomeController::paginaGerenciamento();
+        break;
 
     case "/cadastro/aluno":
         AlunoController::insert();
@@ -47,21 +54,25 @@ switch ($uri) {
     case "/noticias":
         NoticiaController::get();
         break;
+    case "/painel/noticia":
+        NoticiaController::painelNoticia();
+        break;
     case "/cadastro/noticia":
         NoticiaController::insert();
         break;
-
     case "/atualizar/noticia":
         NoticiaController::insert();
         break;
     case "/excluir/noticia":
         break;
 
-
+    //View eventos
     case "/eventos":
         include VIEW . "evento/Evento.php";
         break;
-
+    case "/painel/evento":
+        EventoController::painelEvento();
+        break;
     case "/cadastro/evento":
         include VIEW . "evento/Evento.php";
         break;
@@ -71,9 +82,12 @@ switch ($uri) {
     case "/excluir/evento":
         break;
 
-
+    //View avisos
     case "/avisos":
         include VIEW . "comunicado/Comunicados.php";
+        break;
+    case "/painel/aviso":
+        AvisoController::painelAviso();
         break;
     case "/aviso/cadastro":
         include VIEW . "comunicado/Comunicados.php";
@@ -83,23 +97,15 @@ switch ($uri) {
         break;
     case "/exlcuir/aviso":
         break;
-        
+
 
     case "/contato":
         include VIEW . "contato/Contato.php";
         break;
     case "/perfil":
-        // aqui vai a logica para o redirect ... do perfil do tipo adm ou aluno.
+        UsuarioController::perfil();
         break;
 
-    case "/perfil/aluno":
-        AlunoController::getById();
-        break;
-
-    case "/perfil/administrador":
-        AdministradorController::getById();
-        break;
-        
     default:
         header('Location: /');
         exit;

@@ -18,35 +18,29 @@ abstract class HomeController extends Controller
             $indice = 0;
         }
 
-        if (isset($_SESSION['usuario']) && isset($_SESSION['senha'])) {
-            new View(
-                "Pagina Principal",
-                VIEW . "template/Nav_footer_out.php",
-                VIEW . "include/Noticias_avisos.php",
-                $lista !== false ?
-                    $model = [
-                        "noticias" => $paginas[$indice] ?? [],
-                        "destaques" => array_slice($paginas[$indice] ?? [], 0, 3),
-                        "pagina" => $pagina < 1 ? 1 : $pagina,
-                        "totalPaginas" => count($paginas)
-                    ]
-                    : []
-            )->renderizar();
-        } else {
-            new View(
-                "Pagina Principal",
-                VIEW . "template/Nav_footer_logado.php",
-                VIEW . "include/Noticias_avisos.php",
-                $lista !== false ?
-                    $model = [
-                        "noticias" => $paginas[$indice] ?? [],
-                        "destaques" => array_slice($paginas[$indice] ?? [], 0, 3),
-                        "pagina" => $pagina < 1 ? 1 : $pagina,
-                        "totalPaginas" => count($paginas)
-                    ]
-                    : []
-            )->renderizar();
-        }
+        new View(
+            "Portal CETIDAM",
+            View::$nav_footer,
+           View::$dinamico."noticias_avisos.php",
+            $lista !== false ?
+                $model = [
+                    "noticias" => $paginas[$indice] ?? [],
+                    "destaques" => array_slice($paginas[$indice] ?? [], 0, 3),
+                    "pagina" => $pagina < 1 ? 1 : $pagina,
+                    "totalPaginas" => count($paginas)
+                ]
+                : []
+        )->renderizar();
     }
 
+    public static function paginaNoticiaEventoAviso()
+    {
+        new View("Painel Noticia , Evento e Aviso!", View::$nav_footer, VIEW . "include/pages/estatico/not_eve_avi.php", null)->renderizar();
+    }
+
+    public static function paginaGerenciamento()
+    {
+        LoginController::logadoRedirect("/painel/gerenciamento");
+        new View("Painel Gerenciamento!", View::$nav_footer, View::$dinamico . "gerenciamento.php", null)->renderizar();
+    }
 }
