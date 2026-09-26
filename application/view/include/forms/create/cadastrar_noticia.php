@@ -6,7 +6,7 @@
                     <h1 class="h4 card-title mb-0">Nova Notícia</h1>
                 </div>
                 <div class="card-body p-3 p-md-4">
-                    <form action="/noticia/cadastro" method="POST" enctype="multipart/form-data">
+                    <form action="/cadastro/noticia" method="POST" enctype="multipart/form-data">
                         
                         <div class="mb-3">
                             <label for="titulo" class="form-label fw-bold">Título da Notícia</label>

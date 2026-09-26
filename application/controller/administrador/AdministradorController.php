@@ -3,6 +3,8 @@
 namespace controller\administrador;
 
 use controller\Controller;
+use controller\LoginController;
+use model\Administrador\Administrador;
 use view\View;
 
 abstract class AdministradorController extends Controller
@@ -12,17 +14,18 @@ abstract class AdministradorController extends Controller
         
     }
 
-    public static function getById(): void
+    public static function getById(int $id): Administrador|bool
     {
-        self::logadoRedirect();
-
-        new View("Perfil", View::$logado, VIEW . "include/Perfil_administrador.php", null)->renderizar();
+        $obj = new Administrador();
+        $obj->id = $id;
+        $resultado = $obj->get();
+        return (is_object($resultado))? $resultado : false;
     }
 
 
     public static function insert(): void
     {
-        self::logadoRedirect();
+        LoginController::logadoRedirect(null);
         new View("CADASTRO ADM!", View::$logado, VIEW . "include/forms/create/cadastrar_adm.php", null)->renderizar();
     }
 

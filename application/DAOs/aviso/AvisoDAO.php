@@ -11,39 +11,24 @@ class AvisoDAO extends DAO
 
     public function insert(Aviso $model): Aviso|bool
     {
-        $query = "INSERT INTO aviso (titulo, descricao, data_aviso,
-                  validade, prioridade, status, id_administrador)
-                  VALUES (?, ?, ?, ?, ?, ?, ?);";
+        $query = "INSERT INTO aviso (titulo, ativo, id_administrador)
+                  VALUES (?, ?, ?);";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->titulo);
-        $stmt->bindValue(2, $model->descricao);
-        $stmt->bindValue(3, $model->data_aviso);
-        $stmt->bindValue(4, $model->validade);
-        $stmt->bindValue(5, $model->prioridade);
-        $stmt->bindValue(6, $model->status);
-        $stmt->bindValue(7, $model->id_administrador);
+        $stmt->bindValue(2, $model->ativo);
+        $stmt->bindValue(3, $model->id_administrador);
         return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
     public function update(Aviso $model): Aviso|bool
     {
         $query = "UPDATE aviso SET
                   titulo = ?,
-                  descricao = ?,
-                  data_aviso = ?,
-                  validade = ?,
-                  prioridade = ?,
-                  status = ?,
-                  id_administrador = ?
+                  ativo = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->titulo);
-        $stmt->bindValue(2, $model->descricao);
-        $stmt->bindValue(3, $model->data_aviso);
-        $stmt->bindValue(4, $model->validade);
-        $stmt->bindValue(5, $model->prioridade);
-        $stmt->bindValue(6, $model->status);
-        $stmt->bindValue(7, $model->id_administrador);
-        $stmt->bindValue(8, $model->id);
+        $stmt->bindValue(2, (int)$model->ativo,PDO::PARAM_INT);
+        $stmt->bindValue(3, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
     }
     public function delete(int $id): bool

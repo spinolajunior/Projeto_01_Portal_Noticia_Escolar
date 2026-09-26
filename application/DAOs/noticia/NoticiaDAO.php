@@ -29,20 +29,14 @@ class NoticiaDAO extends DAO
                   titulo = ?,
                   subtitulo = ?,
                   descricao = ?,
-                  imagem = ?,
-                  data_pub = ?,
-                  status = ?,
-                  id_administrador = ?
+                  status = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->titulo);
         $stmt->bindValue(2, $model->subtitulo);
         $stmt->bindValue(3, $model->descricao);
-        $stmt->bindValue(4, $model->imagem);
-        $stmt->bindValue(5, $model->data_pub);
-        $stmt->bindValue(6, $model->status);
-        $stmt->bindValue(7, $model->id_administrador);
-        $stmt->bindValue(7, $model->id);
+        $stmt->bindValue(4, (int)$model->status,PDO::PARAM_INT);
+        $stmt->bindValue(5, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
     }
     public function delete(int $id): bool
@@ -83,6 +77,17 @@ class NoticiaDAO extends DAO
         $stmt->bindValue(2, $model->id);
 
         return $stmt->execute();
+    }
 
+    public function noticia_autor_all(): array|bool
+    {
+        $query = "SELECT noticia.*, administrador.nome as nome_autor
+                  FROM noticia
+                  INNER JOIN administrador ON noticia.id_administrador = administrador.id;";
+        $consulta = $this->pdo->prepare($query);
+        $consulta -> execute();
+        
+
+        return ($consulta)?$consulta->fetchAll(PDO::FETCH_CLASS,Noticia::class) : false;
     }
 }

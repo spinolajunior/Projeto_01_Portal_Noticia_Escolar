@@ -10,11 +10,6 @@ use PDOException;
 abstract class Controller
 {
 
-    public static function renderize(String $view, ?array $Model)
-    {
-
-        include VIEW . $view . '.php';
-    }
 
     
 

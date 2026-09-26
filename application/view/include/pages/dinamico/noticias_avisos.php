@@ -1,4 +1,303 @@
-<main class="container my-4">
+<?php
+
+// ==========================================
+// DADOS RECEBIDOS DO CONTROLLER
+// ==========================================
+
+$noticias = $model["noticias"] ?? [];
+$destaques = array_values($model["destaques"] ?? []);
+$eventos = $model["eventos"] ?? [];
+
+// Somente avisos ativos aparecem na Home.
+$avisos = array_values(array_filter(
+    $model["avisos"] ?? [],
+    static fn($aviso) =>
+    isset($aviso->ativo) && (int) $aviso->ativo === 1
+));
+
+$totalPaginas = max(0, (int) ($model["totalPaginas"] ?? 0));
+
+$pagina = max(
+    1,
+    min(
+        (int) ($model["pagina"] ?? 1),
+        max(1, $totalPaginas)
+    )
+);
+
+
+// ==========================================
+// FORMATAÇÃO DAS DATAS
+// ==========================================
+
+$formatarDataHome = static function ($data): string {
+
+    if (empty($data)) {
+        return 'Data não definida';
+    }
+
+    try {
+
+        return (new DateTimeImmutable($data))
+            ->format('d/m/Y');
+    } catch (Exception $e) {
+
+        return 'Data não definida';
+    }
+};
+
+
+// ==========================================
+// RESUMO DAS NOTÍCIAS
+// ==========================================
+
+$resumirNoticia = static function ($texto, int $limite): string {
+
+    $texto = trim(
+        preg_replace(
+            '/\s+/u',
+            ' ',
+            strip_tags((string) $texto)
+        ) ?? ''
+    );
+
+    $resumo = mb_substr(
+        $texto,
+        0,
+        $limite,
+        'UTF-8'
+    );
+
+    if (mb_strlen($texto, 'UTF-8') > $limite) {
+        $resumo .= '...';
+    }
+
+    return htmlspecialchars(
+        $resumo,
+        ENT_QUOTES,
+        'UTF-8'
+    );
+};
+
+?>
+
+<main class="container my-4 home-portal">
+
+    <style>
+        /* =====================================
+           CARROSSEL
+        ===================================== */
+
+        .home-carousel {
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+
+        .home-destaque-item {
+            position: relative;
+        }
+
+        .home-destaque-imagem {
+            width: 100%;
+            height: 420px;
+            object-fit: cover;
+        }
+
+        /* Gradiente para facilitar a leitura */
+        .home-destaque-item::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+
+            background: linear-gradient(to top,
+                    rgba(0, 0, 0, .85),
+                    rgba(0, 0, 0, .25) 60%,
+                    transparent);
+
+            pointer-events: none;
+        }
+
+        .home-carousel .carousel-caption {
+            z-index: 2;
+            left: 10%;
+            right: 10%;
+            bottom: 2.5rem;
+        }
+
+        .home-carousel .carousel-caption h2 {
+            font-weight: 700;
+        }
+
+        .home-carousel .carousel-control-prev,
+        .home-carousel .carousel-control-next {
+            z-index: 3;
+            width: 8%;
+        }
+
+        .home-carousel .carousel-indicators {
+            z-index: 3;
+        }
+
+
+        /* =====================================
+           CARDS DE NOTÍCIAS
+        ===================================== */
+
+        .home-noticia-card {
+            border: 0;
+            border-radius: .75rem;
+            overflow: hidden;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .home-noticia-card:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 .5rem 1rem rgba(0, 0, 0, .12) !important;
+        }
+
+        .home-noticia-imagem {
+            height: 180px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .home-noticia-card .card-title,
+        .home-noticia-card .card-text {
+            overflow-wrap: anywhere;
+        }
+
+
+        /* =====================================
+           BARRA LATERAL
+        ===================================== */
+
+        .home-sidebar-card {
+            border: 0;
+            border-radius: .75rem;
+            overflow: hidden;
+        }
+
+        .home-sidebar-card .card-header {
+            background-color: #0d6efd;
+            color: #fff;
+            border: 0;
+
+            padding: .9rem 1rem;
+            font-weight: 600;
+        }
+
+        .home-sidebar-card .list-group-item {
+            padding: 1rem;
+            border-color: #edf0f4;
+        }
+
+        .home-sidebar-card .list-group-item:last-child {
+            border-bottom: 0;
+        }
+
+        .home-sidebar-card .icone-sidebar {
+            color: #0d6efd;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .home-sidebar-card .titulo-sidebar {
+            font-size: .9rem;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .home-sidebar-card .data-sidebar {
+            font-size: .75rem;
+            color: #6c757d;
+        }
+
+
+        /* =====================================
+           ESTADOS VAZIOS
+        ===================================== */
+
+        .home-vazio {
+            border: 1px dashed #d9e2ef;
+            border-radius: .75rem;
+            background-color: #f8f9fa;
+        }
+
+        .home-vazio .icone-vazio {
+            color: #6c757d;
+            font-size: 2.5rem;
+        }
+
+
+        /* =====================================
+           RESPONSIVIDADE
+        ===================================== */
+
+        @media (max-width: 767.98px) {
+
+            .home-destaque-imagem {
+                height: 320px;
+            }
+
+            .home-carousel .carousel-caption {
+                left: 12%;
+                right: 12%;
+                bottom: 2rem;
+            }
+
+            .home-carousel .carousel-caption h2 {
+                font-size: 1.25rem;
+            }
+
+            .home-carousel .carousel-caption p {
+                font-size: .85rem;
+            }
+
+            .home-carousel .carousel-caption small {
+                font-size: .75rem;
+            }
+
+            .home-carousel .carousel-caption .btn {
+                font-size: .8rem;
+                padding: .4rem .8rem;
+            }
+
+            .home-noticia-imagem {
+                height: 200px;
+            }
+
+        }
+
+        @media (max-width: 575.98px) {
+
+            .home-destaque-imagem {
+                height: 290px;
+            }
+
+            .home-carousel .carousel-caption h2 {
+                font-size: 1.1rem;
+            }
+
+            .home-carousel .carousel-caption p {
+                display: none;
+            }
+
+            .home-carousel .carousel-caption {
+                bottom: 2rem;
+            }
+
+        }
+    </style>
+
+
+    <!-- =====================================
+         DESTAQUES DA SEMANA
+    ===================================== -->
 
     <section class="mb-5">
 
@@ -6,299 +305,572 @@
             DESTAQUES DA SEMANA
         </h2>
 
-        <div id="carouselNoticias"
-            class="carousel slide carousel-fade"
-            data-bs-ride="carousel"
-            data-bs-interval="10000">
 
+        <?php if (empty($destaques)): ?>
 
-            <div class="carousel-indicators">
+            <!-- NENHUM DESTAQUE -->
 
-                <?php foreach ($model["destaques"] as $index => $noticia): ?>
+            <div class="home-vazio text-center p-4 p-md-5">
 
-                    <button type="button"
-                        data-bs-target="#carouselNoticias"
-                        data-bs-slide-to="<?= $index ?>"
-                        class="<?= $index == 0 ? 'active' : '' ?>">
-                    </button>
+                <i class="bi bi-newspaper icone-vazio d-block mb-3"></i>
 
-                <?php endforeach; ?>
+                <h5 class="fw-semibold mb-2">
+                    Nenhum destaque disponível
+                </h5>
+
+                <p class="text-body-secondary mb-0">
+                    Ainda não há notícias em destaque no portal.
+                </p>
 
             </div>
 
+        <?php else: ?>
+
+            <!-- CARROSSEL -->
+
+            <div
+                id="carouselNoticias"
+                class="carousel slide carousel-fade home-carousel shadow-sm"
+                data-bs-ride="carousel"
+                data-bs-interval="10000">
 
 
-            <div class="carousel-inner rounded">
+                <!-- INDICADORES -->
 
-                <?php foreach ($model["destaques"] as $index => $noticia): ?>
+                <?php if (count($destaques) > 1): ?>
 
-                    <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
+                    <div class="carousel-indicators">
 
-                        <img src="<?= htmlspecialchars($noticia->imagem) ?>.jpg"
-                            class="d-block w-100"
-                            style="height:420px; object-fit:cover;">
+                        <?php foreach ($destaques as $index => $noticia): ?>
 
+                            <button
+                                type="button"
+                                data-bs-target="#carouselNoticias"
+                                data-bs-slide-to="<?= (int) $index ?>"
+                                class="<?= $index === 0 ? 'active' : '' ?>"
+                                aria-label="Destaque <?= $index + 1 ?>"
+                                <?= $index === 0 ? 'aria-current="true"' : '' ?>>
+                            </button>
 
-                        <div class="carousel-caption text-start">
-
-                            <small>
-                                Publicado em:
-                                <?= date('d/m/Y', strtotime($noticia->data_pub)) ?>
-                            </small>
-
-                            <h2>
-                                <?= htmlspecialchars($noticia->titulo) ?>
-                            </h2>
-
-                            <p>
-                                <?= mb_substr(
-                                    strip_tags($noticia->descricao),
-                                    0,
-                                    90,
-                                    'UTF-8'
-                                ) ?>...
-                            </p>
-
-                            <a href="/noticias?id=<?= $noticia->id ?>"
-                                class="btn btn-primary">
-                                Leia Mais
-                            </a>
-
-                        </div>
+                        <?php endforeach; ?>
 
                     </div>
 
-                <?php endforeach; ?>
-
-            </div>
+                <?php endif; ?>
 
 
+                <!-- ITENS DO CARROSSEL -->
 
-            <button class="carousel-control-prev"
-                type="button"
-                data-bs-target="#carouselNoticias"
-                data-bs-slide="prev">
+                <div class="carousel-inner">
 
-                <span class="carousel-control-prev-icon"></span>
+                    <?php foreach ($destaques as $index => $noticia): ?>
 
-            </button>
+                        <div class="carousel-item home-destaque-item <?= $index === 0 ? 'active' : '' ?>">
 
+                            <!-- IMAGEM -->
 
-            <button class="carousel-control-next"
-                type="button"
-                data-bs-target="#carouselNoticias"
-                data-bs-slide="next">
-
-                <span class="carousel-control-next-icon"></span>
-
-            </button>
+                            <img
+                                src="<?= htmlspecialchars($noticia->imagem . '.jpg', ENT_QUOTES, 'UTF-8') ?>"
+                                class="d-block home-destaque-imagem"
+                                alt="<?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>">
 
 
-        </div>
+                            <!-- CONTEÚDO -->
 
-    </section>
+                            <div class="carousel-caption text-start">
 
+                                <small class="d-block mb-2">
 
+                                    <i class="bi bi-calendar3 me-1"></i>
 
-    <section>
+                                    Publicado em:
+                                    <?= $formatarDataHome($noticia->data_pub) ?>
 
-        <div class="row">
-
-
-            <div class="col-lg-9">
-
-
-                <h2 class="fw-bold mb-3">
-                    ÚLTIMAS NOTÍCIAS
-                </h2>
+                                </small>
 
 
-                <div class="row g-4">
+                                <h2>
+
+                                    <?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>
+
+                                </h2>
 
 
-                    <?php foreach ($model["noticias"] as $noticia): ?>
+                                <p class="mb-3">
+
+                                    <?= $resumirNoticia($noticia->descricao, 90) ?>
+
+                                </p>
 
 
-                        <div class="col-md-6 col-xl-4">
+                                <a
+                                    href="/noticias?id=<?= (int) $noticia->id ?>"
+                                    class="btn btn-primary">
 
-                            <div class="card h-100 shadow-sm">
+                                    Leia Mais
 
+                                    <i class="bi bi-arrow-right ms-1"></i>
 
-                                <img src="<?= htmlspecialchars($noticia->imagem) ?>.jpg"
-                                    class="card-img-top"
-                                    style="height:180px; object-fit:cover;">
-
-
-
-                                <div class="card-body">
-
-
-                                    <small class="text-primary">
-                                        Publicado em:
-                                        <?= date('d/m/Y', strtotime($noticia->data_pub)) ?>
-                                    </small>
-
-
-                                    <h5 class="card-title mt-2">
-                                        <?= htmlspecialchars($noticia->titulo) ?>
-                                    </h5>
-
-
-                                    <p class="card-text">
-                                        <?= mb_substr(
-                                            strip_tags($noticia->descricao),
-                                            0,
-                                            120,
-                                            'UTF-8'
-                                        ) ?>...
-                                    </p>
-
-
-                                </div>
-
-
-
-                                <div class="card-footer bg-white border-0">
-
-                                    <a href="/noticias?id=<?= $noticia->id ?>"
-                                        class="btn btn-primary btn-sm">
-
-                                        Leia Mais
-
-                                    </a>
-
-                                </div>
-
-
+                                </a>
 
                             </div>
 
                         </div>
 
-
                     <?php endforeach; ?>
-
 
                 </div>
 
 
+                <!-- CONTROLES -->
 
-                <nav class="mt-4">
+                <?php if (count($destaques) > 1): ?>
 
-                    <ul class="pagination justify-content-center">
+                    <button
+                        class="carousel-control-prev"
+                        type="button"
+                        data-bs-target="#carouselNoticias"
+                        data-bs-slide="prev"
+                        aria-label="Destaque anterior">
 
+                        <span
+                            class="carousel-control-prev-icon"
+                            aria-hidden="true">
+                        </span>
 
-                        <li class="page-item <?= $model["pagina"] <= 1 ? 'disabled' : '' ?>">
-
-                            <a class="page-link"
-                                href="?pagina=<?= $model["pagina"] - 1 ?>">
-
-                                &laquo;
-
-                            </a>
-
-                        </li>
-
-
-
-                        <?php for ($i = 1; $i <= $model["totalPaginas"]; $i++): ?>
+                    </button>
 
 
-                            <li class="page-item <?= $i == $model["pagina"] ? 'active' : '' ?>">
+                    <button
+                        class="carousel-control-next"
+                        type="button"
+                        data-bs-target="#carouselNoticias"
+                        data-bs-slide="next"
+                        aria-label="Próximo destaque">
 
-                                <a class="page-link"
-                                    href="?pagina=<?= $i ?>">
+                        <span
+                            class="carousel-control-next-icon"
+                            aria-hidden="true">
+                        </span>
 
-                                    <?= $i ?>
+                    </button>
 
-                                </a>
+                <?php endif; ?>
 
-                            </li>
+            </div>
 
+        <?php endif; ?>
 
-                        <?php endfor; ?>
-
-
-
-                        <li class="page-item <?= $model["pagina"] >= $model["totalPaginas"] ? 'disabled' : '' ?>">
-
-                            <a class="page-link"
-                                href="?pagina=<?= $model["pagina"] + 1 ?>">
-
-                                &raquo;
-
-                            </a>
-
-                        </li>
+    </section>
 
 
-                    </ul>
 
-                </nav>
+    <!-- =====================================
+         NOTÍCIAS + BARRA LATERAL
+    ===================================== -->
 
+    <section>
+
+        <!-- =====================================
+             CABEÇALHO COMPARTILHADO
+
+             O título fica fora da row para que
+             notícias e sidebar comecem alinhadas.
+        ===================================== -->
+
+        <h2 class="fw-bold mb-4">
+            ÚLTIMAS NOTÍCIAS
+        </h2>
+
+
+        <!-- =====================================
+             CONTEÚDO PRINCIPAL
+
+             As duas colunas começam na mesma
+             linha do Grid do Bootstrap.
+        ===================================== -->
+
+        <div class="row g-4 align-items-start">
+
+
+            <!-- =====================================
+                 COLUNA DAS NOTÍCIAS
+            ===================================== -->
+
+            <div class="col-12 col-lg-9">
+
+
+                <?php if (empty($noticias)): ?>
+
+                    <!-- NENHUMA NOTÍCIA -->
+
+                    <div class="home-vazio text-center p-4 p-md-5">
+
+                        <i class="bi bi-journal-x icone-vazio d-block mb-3"></i>
+
+                        <h5 class="fw-semibold mb-2">
+                            Nenhuma notícia disponível
+                        </h5>
+
+                        <p class="text-body-secondary mb-0">
+                            Ainda não existem notícias publicadas no portal.
+                        </p>
+
+                    </div>
+
+                <?php else: ?>
+
+
+                    <!-- CARDS -->
+
+                    <div class="row g-4">
+
+                        <?php foreach ($noticias as $noticia): ?>
+
+                            <div class="col-12 col-md-6 col-xl-4">
+
+                                <article class="card h-100 shadow-sm home-noticia-card">
+
+
+                                    <!-- IMAGEM -->
+
+                                    <img
+                                        src="<?= htmlspecialchars($noticia->imagem . '.jpg', ENT_QUOTES, 'UTF-8') ?>"
+                                        class="card-img-top home-noticia-imagem"
+                                        alt="<?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>"
+                                        loading="lazy">
+
+
+                                    <!-- CONTEÚDO -->
+
+                                    <div class="card-body">
+
+                                        <small class="text-primary">
+
+                                            <i class="bi bi-calendar3 me-1"></i>
+
+                                            Publicado em:
+                                            <?= $formatarDataHome($noticia->data_pub) ?>
+
+                                        </small>
+
+
+                                        <h5 class="card-title mt-2 fw-semibold">
+
+                                            <?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>
+
+                                        </h5>
+
+
+                                        <p class="card-text text-body-secondary">
+
+                                            <?= $resumirNoticia($noticia->descricao, 120) ?>
+
+                                        </p>
+
+                                    </div>
+
+
+                                    <!-- RODAPÉ -->
+
+                                    <div class="card-footer bg-white border-0 pb-3">
+
+                                        <a
+                                            href="/noticias?id=<?= (int) $noticia->id ?>"
+                                            class="btn btn-primary btn-sm">
+
+                                            Leia Mais
+
+                                            <i class="bi bi-arrow-right ms-1"></i>
+
+                                        </a>
+
+                                    </div>
+
+                                </article>
+
+                            </div>
+
+                        <?php endforeach; ?>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         PAGINAÇÃO
+                    ===================================== -->
+
+                    <?php if ($totalPaginas > 1): ?>
+
+                        <nav
+                            class="mt-4"
+                            aria-label="Paginação de notícias">
+
+                            <ul class="pagination flex-wrap justify-content-center gap-1">
+
+
+                                <!-- ANTERIOR -->
+
+                                <li class="page-item <?= $pagina <= 1 ? 'disabled' : '' ?>">
+
+                                    <?php if ($pagina > 1): ?>
+
+                                        <a
+                                            class="page-link"
+                                            href="?pagina=<?= $pagina - 1 ?>"
+                                            aria-label="Página anterior">
+
+                                            &laquo;
+
+                                        </a>
+
+                                    <?php else: ?>
+
+                                        <span
+                                            class="page-link"
+                                            aria-disabled="true">
+
+                                            &laquo;
+
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </li>
+
+
+                                <!-- NÚMEROS DAS PÁGINAS -->
+
+                                <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+
+                                    <li class="page-item <?= $i === $pagina ? 'active' : '' ?>">
+
+                                        <a
+                                            class="page-link"
+                                            href="?pagina=<?= $i ?>"
+                                            <?= $i === $pagina ? 'aria-current="page"' : '' ?>>
+
+                                            <?= $i ?>
+
+                                        </a>
+
+                                    </li>
+
+                                <?php endfor; ?>
+
+
+                                <!-- PRÓXIMA -->
+
+                                <li class="page-item <?= $pagina >= $totalPaginas ? 'disabled' : '' ?>">
+
+                                    <?php if ($pagina < $totalPaginas): ?>
+
+                                        <a
+                                            class="page-link"
+                                            href="?pagina=<?= $pagina + 1 ?>"
+                                            aria-label="Próxima página">
+
+                                            &raquo;
+
+                                        </a>
+
+                                    <?php else: ?>
+
+                                        <span
+                                            class="page-link"
+                                            aria-disabled="true">
+
+                                            &raquo;
+
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </li>
+
+                            </ul>
+
+                        </nav>
+
+                    <?php endif; ?>
+
+                <?php endif; ?>
 
             </div>
 
 
 
-            <aside class="col-lg-3">
+            <!-- =====================================
+                 BARRA LATERAL
+
+                 Agora começa na mesma altura
+                 dos cards das notícias.
+            ===================================== -->
+
+            <aside class="col-12 col-lg-3">
 
 
-                <div class="card shadow-sm mb-4">
+                <!-- =====================================
+                     AGENDA ESCOLAR
+                ===================================== -->
 
-                    <div class="card-header fw-bold">
+                <div class="card shadow-sm mb-4 home-sidebar-card">
+
+                    <div class="card-header">
+
+                        <i class="bi bi-calendar-event me-2"></i>
+
                         Agenda Escolar
+
                     </div>
 
 
-                    <ul class="list-group list-group-flush">
+                    <?php if (empty($eventos)): ?>
 
-                        <li class="list-group-item">
-                            17 Ago - Início das provas
-                        </li>
+                        <!-- NENHUM EVENTO -->
 
-                        <li class="list-group-item">
-                            20 Ago - Reunião de Pais
-                        </li>
+                        <div class="card-body text-center py-4">
 
-                        <li class="list-group-item">
-                            25 Ago - Feira Cultural
-                        </li>
+                            <i class="bi bi-calendar-x fs-2 text-secondary d-block mb-2"></i>
 
-                    </ul>
+                            <p class="text-body-secondary small mb-0">
+
+                                Nenhum evento cadastrado no momento.
+
+                            </p>
+
+                        </div>
+
+                    <?php else: ?>
+
+                        <ul class="list-group list-group-flush">
+
+                            <?php foreach ($eventos as $evento): ?>
+
+                                <li class="list-group-item">
+
+                                    <div class="d-flex align-items-start gap-2">
+
+
+                                        <!-- ÍCONE -->
+
+                                        <i class="bi bi-calendar-check icone-sidebar"></i>
+
+
+                                        <!-- INFORMAÇÕES -->
+
+                                        <div
+                                            class="flex-grow-1"
+                                            style="min-width: 0;">
+
+                                            <div class="titulo-sidebar mb-1">
+
+                                                <?= htmlspecialchars($evento->titulo, ENT_QUOTES, 'UTF-8') ?>
+
+                                            </div>
+
+
+                                            <div class="data-sidebar">
+
+                                                <i class="bi bi-clock me-1"></i>
+
+                                                <?= $formatarDataHome($evento->data_evento) ?>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </li>
+
+                            <?php endforeach; ?>
+
+                        </ul>
+
+                    <?php endif; ?>
 
                 </div>
 
 
 
-                <div class="card shadow-sm">
+                <!-- =====================================
+                     COMUNICADOS / AVISOS
+                ===================================== -->
 
-                    <div class="card-header fw-bold">
+                <div class="card shadow-sm home-sidebar-card">
+
+                    <div class="card-header">
+
+                        <i class="bi bi-megaphone me-2"></i>
+
                         Comunicados
+
                     </div>
 
 
-                    <ul class="list-group list-group-flush">
+                    <?php if (empty($avisos)): ?>
 
-                        <li class="list-group-item">
-                            Uniforme obrigatório
-                        </li>
+                        <!-- NENHUM AVISO -->
 
-                        <li class="list-group-item">
-                            Vagas para monitoria
-                        </li>
+                        <div class="card-body text-center py-4">
 
-                    </ul>
+                            <i class="bi bi-bell-slash fs-2 text-secondary d-block mb-2"></i>
+
+                            <p class="text-body-secondary small mb-0">
+
+                                Nenhum comunicado disponível no momento.
+
+                            </p>
+
+                        </div>
+
+                    <?php else: ?>
+
+                        <ul class="list-group list-group-flush">
+
+                            <?php foreach ($avisos as $aviso): ?>
+
+                                <li class="list-group-item">
+
+                                    <div class="d-flex align-items-start gap-2">
+
+
+                                        <!-- ÍCONE -->
+
+                                        <i class="bi bi-info-circle-fill icone-sidebar"></i>
+
+
+                                        <!-- CONTEÚDO -->
+
+                                        <div
+                                            class="flex-grow-1"
+                                            style="min-width: 0;">
+
+                                            <div class="titulo-sidebar">
+
+                                                <?= htmlspecialchars($aviso->titulo, ENT_QUOTES, 'UTF-8') ?>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </li>
+
+                            <?php endforeach; ?>
+
+                        </ul>
+
+                    <?php endif; ?>
 
                 </div>
-
 
             </aside>
-
 
         </div>
 
     </section>
-
 
 </main>

@@ -41,6 +41,7 @@ abstract class LoginController extends Controller
                     $_SESSION['criado_em'] = $usuario->criado_em;
                     $_SESSION['last_login'] = $usuario->last_login;
                     $_SESSION['ativo'] = $usuario->ativo;
+
                     $usuario = self::userOrAdm((int)$_SESSION["id_credencial"]);
 
                     if ($usuario["type"] == "aluno") {
@@ -72,7 +73,9 @@ abstract class LoginController extends Controller
                         exit;
                     }
                 } else {
-                    new View("Login", VIEW . "template/nav_footer_logado.php", VIEW . "include/forms/form_login.php", null)->renderizar();
+                    $model = ["error" => "404",
+                                "msg" => "Credenciais Invalidas!" ];
+                    new View("Login",View::$nav_footer, View::$formPost."form_login.php", $model)->renderizar();
                 }
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {

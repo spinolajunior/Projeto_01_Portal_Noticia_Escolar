@@ -14,6 +14,7 @@ final class Noticia
     public string $data_pub;
     public bool $status;
     public ?int $id_administrador = null;
+    public ?string $nome_autor = null;
 
     public function get(): Noticia|bool
     {
@@ -28,7 +29,7 @@ final class Noticia
         return new NoticiaDAO()->update($this);
     }
 
-    public function delete(): Noticia|bool
+    public function delete(): bool
     {
         return new NoticiaDAO()->delete($this->id);
     }
@@ -41,4 +42,8 @@ final class Noticia
     {
         return new NoticiaDAO()->setImg($this);
     }
+    public function noticia_autor_all() : array|bool {
+        return new NoticiaDAO()->noticia_autor_all();
+    }
+    
 }

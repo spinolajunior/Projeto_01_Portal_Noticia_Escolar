@@ -1,29 +1,49 @@
-<main class="container my-5">
+<?php
+
+$evento = $model['evento'];
+
+$dataEvento = substr(
+    (string) ($evento->data_evento ?? ''),
+    0,
+    10
+);
+
+?>
+
+<main class="container py-4 py-lg-5 flex-grow-1">
 
     <div class="row justify-content-center">
 
-        <div class="col-12 col-md-10 col-lg-8">
+        <div class="col-12 col-lg-10 col-xl-9">
 
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
 
                 <!-- CABEÇALHO -->
                 <div class="card-header bg-primary text-white p-3 p-md-4">
 
-                    <h1 class="h4 card-title mb-1 fw-bold">
-                        <i class="bi bi-calendar-event me-2"></i>
-                        Novo Evento
-                    </h1>
+                    <h4 class="mb-1 fw-bold">
+
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Editar Evento
+
+                    </h4>
 
                     <p class="mb-0 small text-white-50">
-                        Cadastre um novo evento no portal escolar.
+                        Atualize as informações do evento selecionado.
                     </p>
 
                 </div>
 
                 <!-- FORMULÁRIO -->
-                <div class="card-body p-3 p-md-4">
+                <div class="card-body p-3 p-md-4 p-lg-5">
 
-                    <form action="/cadastro/evento" method="POST">
+                    <form method="POST" action="/atualizar/evento">
+
+                        <!-- ID -->
+                        <input
+                            type="hidden"
+                            name="id"
+                            value="<?= (int) $evento->id ?>">
 
                         <!-- TÍTULO -->
                         <div class="mb-3">
@@ -38,12 +58,8 @@
                                 id="titulo"
                                 name="titulo"
                                 maxlength="50"
-                                placeholder="Digite o título do evento"
+                                value="<?= htmlspecialchars($evento->titulo, ENT_QUOTES, 'UTF-8') ?>"
                                 required>
-
-                            <div class="form-text">
-                                Informe um título que identifique o evento.
-                            </div>
 
                         </div>
 
@@ -59,11 +75,8 @@
                                 class="form-control"
                                 id="data_evento"
                                 name="data_evento"
+                                value="<?= htmlspecialchars($dataEvento, ENT_QUOTES, 'UTF-8') ?>"
                                 required>
-
-                            <div class="form-text">
-                                Selecione a data em que o evento acontecerá.
-                            </div>
 
                         </div>
 
@@ -86,7 +99,7 @@
                                 class="btn btn-primary px-4 fw-semibold">
 
                                 <i class="bi bi-check-circle me-1"></i>
-                                Salvar Evento
+                                Salvar Alterações
 
                             </button>
 

@@ -10,6 +10,10 @@ class View
     public static string $dinamicoPaineis = VIEW . "include/pages/dinamico/paineis/";
     public static string $estatico = VIEW . "include/pages/estatico/";
     public static string $formPost = VIEW."/include/forms/post/";
+    public static string $formCreate = VIEW."/include/forms/create/";
+    public static string $formEdit = VIEW."/include/forms/edit/";
+    public static string $uploadImagemNoticia = "view/img/upload/";
+
 
     public function __construct(
         public string $titulo,

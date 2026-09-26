@@ -1,0 +1,3 @@
+1 -> navegador renderiza a pagina mesmo sem estar logado , quando o usurio sai da conta e usa o atalho para voltar , normalemnte deveria pedir login ... mas ele renderiza a pagina como o usuario anterior estivesse logado.
+
+2 -> 

@@ -8,6 +8,7 @@ use controller\aviso\AvisoController;
 use controller\evento\EventoController;
 use controller\UsuarioController;
 use controller\LoginController;
+use model\aviso\Aviso;
 
 $uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
@@ -61,25 +62,29 @@ switch ($uri) {
         NoticiaController::insert();
         break;
     case "/atualizar/noticia":
-        NoticiaController::insert();
+        NoticiaController::update();
         break;
     case "/excluir/noticia":
+        NoticiaController::delete();
         break;
 
     //View eventos
-    case "/eventos":
-        include VIEW . "evento/Evento.php";
-        break;
+   
+    // case "/eventos":
+    //     include VIEW . "evento/Evento.php";
+    //     break;
+
     case "/painel/evento":
         EventoController::painelEvento();
         break;
     case "/cadastro/evento":
-        include VIEW . "evento/Evento.php";
+        EventoController::insert();
         break;
     case "/atualizar/evento":
-        include VIEW . "evento/Evento.php";
+        EventoController::update();
         break;
     case "/excluir/evento":
+        EventoController::delete();
         break;
 
     //View avisos
@@ -89,13 +94,14 @@ switch ($uri) {
     case "/painel/aviso":
         AvisoController::painelAviso();
         break;
-    case "/aviso/cadastro":
-        include VIEW . "comunicado/Comunicados.php";
+    case "/cadastro/aviso":
+        AvisoController::insert();
         break;
     case "/atualizar/aviso":
-        include VIEW . "comunicado/Comunicados.php";
+        AvisoController::update();
         break;
-    case "/exlcuir/aviso":
+    case "/excluir/aviso":
+        AvisoController::delete();
         break;
 
 
