@@ -4,6 +4,8 @@ namespace controller;
 
 use view\View;
 use model\credenciais\Credenciais;
+use controller\serie\SerieController;
+use controller\tipo_adm\TipoAdmController;
 
 abstract class LoginController extends Controller
 {
@@ -33,31 +35,34 @@ abstract class LoginController extends Controller
                 $usuario = new Credenciais();
                 $usuario->usuario = $_POST['usuario'];
                 $usuario->senha = $_POST['senha'];
-
                 if (is_object($usuario = $usuario->logar())) {
                     $_SESSION['usuario'] = $usuario->usuario;
-                    $_SESSION['senha'] = $usuario->senha;
                     $_SESSION['id_credencial'] = $usuario->id;
                     $_SESSION['criado_em'] = $usuario->criado_em;
-                    $_SESSION['last_login'] = $usuario->last_login;
                     $_SESSION['ativo'] = $usuario->ativo;
+                    $_SESSION['foto'] = $usuario->foto;
+                    $_SESSION['senha'] = $usuario->senha;
+                    $_SESSION['last_login'] = $usuario->last_login;
 
                     $usuario = self::userOrAdm((int)$_SESSION["id_credencial"]);
 
                     if ($usuario["type"] == "aluno") {
                         $usuario = $usuario["usuario"];
                         $_SESSION['data_nascimento'] = $usuario->data_nascimento;
+                        $_SESSION['serie'] = SerieController::serieById((int)$usuario->id_serie);
+                        $_SESSION['id_serie'] = $usuario->id_serie;
                     } else {
                         $usuario = $usuario["usuario"];
+                        $adm_acesso = TipoAdmController::adm_acesso($usuario->id_tipo_adm);
                         $_SESSION['id_tipo_adm'] = $usuario->id_tipo_adm;
-                        $_SESSION['id_contato'] = $usuario->id_contato;
-                        $_SESSION['id_endereco'] = $usuario->id_endereco;
-                        $_SESSION['cpf'] = $usuario->cpf;
+                        $_SESSION['id_tipo_adm'] = $usuario->id_tipo_adm;
+                        $_SESSION['cargo'] = $adm_acesso["cargo"];
+                        $_SESSION['acesso'] = $adm_acesso["acesso"];
                     }
                     $_SESSION['id_usuario'] = $usuario->id;
                     $_SESSION['nome'] =  $usuario->nome;
                     $_SESSION['matricula'] = $usuario->matricula;
-                    self::attDateTimeLogin($_SESSION);
+
 
                     if (isset($_POST['checkLembrar'])) {
 
@@ -69,18 +74,20 @@ abstract class LoginController extends Controller
                         header('location: ' . $_GET['next_url']);
                         exit;
                     } else {
-                         header('location: /');
+                        header('location: /');
                         exit;
                     }
                 } else {
-                    $model = ["error" => "404",
-                                "msg" => "Credenciais Invalidas!" ];
-                    new View("Login",View::$nav_footer, View::$formPost."form_login.php", $model)->renderizar();
+                    $model = [
+                        "error" => "404",
+                        "msg" => "Credenciais Invalidas!"
+                    ];
+                    new View("Login", View::$nav_footer, View::$formPost . "form_login.php", $model)->renderizar();
                 }
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
-            new View("Login", View::$nav_footer, View::$formPost."form_login.php", null)->renderizar();
+            new View("Login", View::$nav_footer, View::$formPost . "form_login.php", null)->renderizar();
         }
     }
 

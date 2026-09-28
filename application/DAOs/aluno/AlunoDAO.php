@@ -11,13 +11,13 @@ class AlunoDAO extends DAO
 
     public function insert(Aluno $model): Aluno|bool
     {
-        $query = "INSERT INTO aluno (nome, matricula, data_nascimento, serie, id_credenciais)
+        $query = "INSERT INTO aluno (nome, matricula, data_nascimento, id_serie, id_credenciais)
         VALUES (?, ?, ?, ?, ?);";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
         $stmt->bindValue(3, $model->data_nascimento);
-        $stmt->bindValue(4, $model->serie);
+        $stmt->bindValue(4, $model->id_serie);
         $stmt->bindValue(5, $model->id_credenciais);
         return ($stmt->execute()) ? $this->getById((int)$this->pdo->lastInsertId()) : false;
     }
@@ -27,14 +27,14 @@ class AlunoDAO extends DAO
                   nome = ?,
                   matricula = ?,
                   data_nascimento = ?,
-                  serie = ?,
+                  id_serie = ?,
                   id_credenciais = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
         $stmt->bindValue(3, $model->data_nascimento);
-        $stmt->bindValue(4, $model->serie);
+        $stmt->bindValue(4, $model->id_serie);
         $stmt->bindValue(5, $model->id_credenciais);
         $stmt->bindValue(6, $model->id);
         return ($stmt->execute()) ? $this->getById($model->id) : false;

@@ -2,6 +2,7 @@
 
 namespace controller;
 
+use DateTimeImmutable;
 use model\administrador\Administrador;
 use model\aluno\Aluno;
 use model\credenciais\Credenciais;
@@ -13,20 +14,14 @@ abstract class Controller
 
     
 
-    public static function attDateTimeLogin(array $sessao): void
+    public static function attDateTimeLogin(int $id): void
     {
 
         $obj = new Credenciais();
-        $obj->id = (int)$sessao['id_credencial'];
-        $obj->usuario = $sessao['usuario'];
-        $obj->senha = $sessao['senha'];
-        $obj->criado_em = $sessao['criado_em'];
-        $dataHora = date('Y-m-d H:i:s');
-        $obj->last_login = $dataHora;
-        $obj->ativo = $sessao['ativo'];
+        $obj->id = $id;
 
         try {
-            $obj->update();
+            $obj->updateLastLogin();
         } catch (PDOException $e) {
             echo "Erro ao Atualizar banco de dados erro: " . $e->getMessage();
         }
@@ -52,5 +47,9 @@ abstract class Controller
                 "usuario" => $adm
             ];
         }
+    }
+
+    public static function formatarData(string $data , string $format): string{
+         return $obj = new DateTimeImmutable($data)->format($format);
     }
 }

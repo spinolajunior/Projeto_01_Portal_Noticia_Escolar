@@ -118,7 +118,7 @@
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-4">
-                    <a href="#" class="card card-gerenciamento-usuario card-cadastro h-100 text-decoration-none">
+                    <a href="/cadastro/usuario" class="card card-gerenciamento-usuario card-cadastro h-100 text-decoration-none">
                         <div class="card-body p-4"><span class="icone-card mb-4"><i class="bi bi-person-plus" aria-hidden="true"></i></span>
                             <h2 class="h5 text-body">Cadastrar usuário</h2>
                             <p class="text-body-secondary mb-0">Crie uma nova conta para um usuário do portal.</p>

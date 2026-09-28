@@ -11,11 +11,8 @@ final class Administrador
     public ?string $foto = null;
     public string $nome;
     public string $matricula;
-    public string $cpf;
     public ?int $id_credenciais = null;
     public ?int $id_tipo_adm = null;
-    public ?int $id_contato = null;
-    public ?int $id_endereco = null;
 
     public function get(): Administrador|bool
     {

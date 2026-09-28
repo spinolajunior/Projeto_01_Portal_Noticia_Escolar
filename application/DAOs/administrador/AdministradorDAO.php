@@ -11,16 +11,13 @@ class AdministradorDAO extends DAO
 
     public function insert(Administrador $model): Administrador|bool
     {
-        $query = "INSERT INTO administrador (nome, matricula, cpf, id_credenciais, id_tipo_adm, id_contato, id_endereco)
-        VALUES (?, ?, ?, ?, ?, ?, ?);";
+        $query = "INSERT INTO administrador (nome, matricula, id_credenciais, id_tipo_adm)
+        VALUES (?, ?, ?, ?);";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
-        $stmt->bindValue(3, $model->cpf);
-        $stmt->bindValue(4, $model->id_credenciais);
-        $stmt->bindValue(5, $model->id_tipo_adm);
-        $stmt->bindValue(6, $model->id_contato);
-        $stmt->bindValue(7, $model->id_endereco);
+        $stmt->bindValue(3, $model->id_credenciais);
+        $stmt->bindValue(4, $model->id_tipo_adm);
         return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
     public function update(Administrador $model): Administrador|bool
@@ -28,21 +25,15 @@ class AdministradorDAO extends DAO
         $query = "UPDATE administrador SET
                   nome = ?,
                   matricula = ?,
-                  cpf = ?,
                   id_credenciais = ?,
                   id_tipo_adm = ?,
-                  id_contato = ?,
-                  id_endereco = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
-        $stmt->bindValue(3, $model->cpf);
-        $stmt->bindValue(4, $model->id_credenciais);
-        $stmt->bindValue(5, $model->id_tipo_adm);
-        $stmt->bindValue(6, $model->id_contato);
-        $stmt->bindValue(7, $model->id_endereco);
-        $stmt->bindValue(8, $model->id);
+        $stmt->bindValue(3, $model->id_credenciais);
+        $stmt->bindValue(4, $model->id_tipo_adm);
+        $stmt->bindValue(5, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
     }
     public function delete(int $id): bool

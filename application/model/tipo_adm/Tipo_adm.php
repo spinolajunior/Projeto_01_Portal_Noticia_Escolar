@@ -3,13 +3,13 @@
 namespace model\tipo_adm;
 use DAOs\tipo_adm\TipoAdmDAO;
 
-final class TipoAdm
+final class Tipo_adm
 {
     public ?int $id = null;
     public string $cargo;
     public int $nivel_acesso;
 
-    public function get(): TipoAdm|bool
+    public function get(): Tipo_adm|bool
     {
         return new TipoAdmDAO()->get($this->id);
     }
@@ -17,17 +17,17 @@ final class TipoAdm
     {
         return new TipoAdmDAO()->getAll();
     }
-    public function update(): TipoAdm|bool
+    public function update(): Tipo_adm|bool
     {
         return new TipoAdmDAO()->update($this);
     }
 
-    public function delete(): TipoAdm|bool
+    public function delete(): Tipo_adm|bool
     {
         return new TipoAdmDAO()->delete($this->id);
     }
 
-    public function insert(): TipoAdm|bool
+    public function insert(): Tipo_adm|bool
     {
         return new TipoAdmDAO()->insert($this);
     }

@@ -26,7 +26,7 @@ class View
 
     public function renderizar(): void
     {
-        //extract($this->model);
+        
         $titulo = $this->titulo;
 
         ob_start();

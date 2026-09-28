@@ -2,14 +2,14 @@
 
 namespace DAOs\tipo_adm;
 
-use model\tipo_adm\TipoAdm;
+use model\tipo_adm\Tipo_adm;
 use DAOs\DAO;
 use \PDO;
 
 class TipoAdmDAO extends DAO
 {
 
-    public function insert(TipoAdm $model): TipoAdm|bool
+    public function insert(Tipo_adm $model): Tipo_adm|bool
     {
         $query = "INSERT INTO tipo_adm (cargo, nivel_acesso)
         VALUES (?, ?);";
@@ -18,7 +18,7 @@ class TipoAdmDAO extends DAO
         $stmt->bindValue(2, $model->nivel_acesso);
         return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
-    public function update(TipoAdm $model): TipoAdm|bool
+    public function update(Tipo_adm $model): Tipo_adm|bool
     {
         $query = "UPDATE tipo_adm SET
                   cargo = ?,
@@ -38,13 +38,13 @@ class TipoAdmDAO extends DAO
 
         return $stmt->execute();
     }
-    public function get(int $id): TipoAdm|bool
+    public function get(int $id): Tipo_adm|bool
     {
         $query = "SELECT * FROM tipo_adm WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $id);
         $stmt->execute();
-        $model = $stmt->fetchObject(TipoAdm::class);
+        $model = $stmt->fetchObject(Tipo_adm::class);
 
         return ($model !== false) ? $model : false;
     }
@@ -54,6 +54,6 @@ class TipoAdmDAO extends DAO
         $stmt = $this->pdo->prepare($query);
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_CLASS, TipoAdm::class);
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Tipo_adm::class);
     }
 }

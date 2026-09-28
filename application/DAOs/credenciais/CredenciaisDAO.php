@@ -3,6 +3,7 @@
 namespace DAOs\credenciais;
 
 use DAOs\DAO;
+use DateTime;
 use model\credenciais\Credenciais;
 use \PDO;
 
@@ -11,13 +12,11 @@ class CredenciaisDAO extends DAO
 
     public function insert(Credenciais $model): Credenciais|bool
     {
-        $query = "INSERT INTO credenciais (usuario, senha, last_login, ativo)
-        VALUES (?, ?, ?, ?);";
+        $query = "INSERT INTO credenciais (usuario, senha)
+        VALUES (?, SHA2(?,256));";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->usuario);
         $stmt->bindValue(2, $model->senha);
-        $stmt->bindValue(3, $model->last_login);
-        $stmt->bindValue(4, $model->ativo);
         return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
     }
     public function update(Credenciais $model): Credenciais|bool
@@ -83,6 +82,34 @@ class CredenciaisDAO extends DAO
         $stmt->bindValue(2, $credencial->senha);
         $stmt->execute();
         $obj = $stmt->fetchObject(Credenciais::class);
-        return ($obj !== false) ? $obj : false;
+        if ($obj !== false) {
+            $this->updateLastLogin($obj->id);
+            $stmt->execute();
+            $obj = $stmt->fetchObject(Credenciais::class);
+            return $obj;
+        } else {
+            return false;
+        }
+    }
+
+    function setFoto(int $id): bool
+    {
+        $query = "UPDATE credenciais SET
+        foto = ? WHERE id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, (string)$id, PDO::PARAM_STR);
+        $stmt->bindValue(1, $id);
+        return $stmt->execute();
+    }
+
+    function updateLastLogin(int $id): bool
+    {
+        $time = new DateTime();
+        $query = "UPDATE credenciais SET 
+        last_login = ? where id = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $time->format("Y-m-d H:i:s"));
+        $stmt->bindValue(2, $id);
+        return $stmt->execute();
     }
 }

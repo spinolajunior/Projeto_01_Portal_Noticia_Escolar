@@ -12,6 +12,7 @@ final class Credenciais
     public string $criado_em;
     public ?string $last_login;
     public bool $ativo;
+    public ?string $foto = null;
 
     public function get(): Credenciais|bool
     {
@@ -39,5 +40,13 @@ final class Credenciais
     public function logar(): Credenciais|bool
     {
         return new CredenciaisDAO()->logar($this);
+    }
+
+    public function setFoto(): bool{
+        return new CredenciaisDAO()->setFoto($this->id);
+    }
+
+    public function updateLastLogin(): bool{
+        return new CredenciaisDAO()->updateLastLogin($this->id);
     }
 }

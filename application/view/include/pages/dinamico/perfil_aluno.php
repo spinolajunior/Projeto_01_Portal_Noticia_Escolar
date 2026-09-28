@@ -1,107 +1,280 @@
 <?php
 
-/**
- * Esta view espera um único array ou objeto em $aluno.
- * Campos usados: aluno.nome, matricula, data_nascimento, serie e foto;
- * credenciais.usuario, ativo, criado_em e last_login.
- */
-$perfil = $aluno ?? null;
-$obter = static function ($fonte, string $campo, $padrao = '') {
-    if (is_array($fonte)) {
-        return $fonte[$campo] ?? $padrao;
-    }
+use controller\Controller;
 
-    return is_object($fonte) ? ($fonte->$campo ?? $padrao) : $padrao;
-};
-$texto = static function (string $campo, string $padrao = 'Não informado') use ($obter, $perfil) {
-    $valor = $obter($perfil, $campo, '');
-    return htmlspecialchars($valor === '' || $valor === null ? $padrao : (string) $valor, ENT_QUOTES, 'UTF-8');
-};
-$foto = trim((string) $obter($perfil, 'foto', ''));
-$fotoUrl = $foto !== '' ? $foto : 'view/img/user.png';
-$ativo = $obter($perfil, 'ativo', null);
+$usuario = $model['usuario'];
+$foto = ($usuario->foto !== null) ? $usuario->foto : "/view/img/upload/perfil_usuario/user_def.jpg";
+
 ?>
-
 <main class="container py-4 py-md-5">
+
     <style>
+        /* CARD PRINCIPAL */
+
         .perfil-aluno {
             border-radius: 1rem;
             overflow: hidden;
         }
 
+        /* CABEÇALHO */
+
         .perfil-aluno .cabecalho-perfil {
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            background: linear-gradient(135deg,
+                    #0d6efd,
+                    #0a58ca);
+
             color: #fff;
         }
 
         .perfil-aluno .foto-perfil {
-            border: 4px solid rgba(255, 255, 255, .9);
+            width: 9rem;
             height: 9rem;
             object-fit: cover;
-            width: 9rem;
+
+            background-color: #fff;
+            border: 4px solid rgba(255, 255, 255, .9);
         }
 
-        .perfil-aluno .campo-perfil {
-            background: #fff;
-            border: 1px solid #e3eaf4;
-            border-radius: .75rem;
-            height: 100%;
-        }
+        /* SEÇÕES */
 
         .perfil-aluno .secao-perfil {
             color: #0d6efd;
             font-weight: 700;
         }
+
+        /* CAMPOS */
+
+        .perfil-aluno .campo-perfil {
+            background-color: #fff;
+            border: 1px solid #e3eaf4;
+            border-radius: .75rem;
+            height: 100%;
+            padding: 1rem;
+
+            transition: border-color .2s ease;
+        }
+
+        .perfil-aluno .campo-perfil:hover {
+            border-color: #b6d4fe;
+        }
+
+        .perfil-aluno .campo-label {
+            display: block;
+            color: #6c757d;
+            font-size: .8rem;
+            margin-bottom: .35rem;
+        }
+
+        .perfil-aluno .campo-valor {
+            display: block;
+            font-size: .95rem;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        /* RESPONSIVIDADE */
+
+        @media (max-width: 575.98px) {
+
+            .perfil-aluno .foto-perfil {
+                width: 7rem;
+                height: 7rem;
+            }
+
+            .perfil-aluno .cabecalho-perfil h1 {
+                font-size: 1.35rem;
+            }
+
+            .perfil-aluno .botao-editar {
+                width: 100%;
+            }
+
+        }
     </style>
 
+
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-9">
+
+        <div class="col-12 col-lg-10 col-xl-9">
+
             <section class="card perfil-aluno border-0 shadow-sm">
+
+
+                <!-- =====================================
+                     CABEÇALHO DO PERFIL
+                ===================================== -->
+
                 <header class="cabecalho-perfil px-3 px-md-5 py-4 py-md-5 text-center">
-                    <img src="<?= htmlspecialchars($fotoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Foto de <?= $texto('nome', 'aluno') ?>" class="foto-perfil rounded-circle shadow-sm mb-3">
-                    <h1 class="h3 fw-bold mb-1"><?= $texto('nome') ?></h1>
-                    <p class="mb-0 opacity-75"><i class="bi bi-mortarboard-fill me-1" aria-hidden="true"></i>Aluno</p>
+
+
+                    <!-- FOTO PADRÃO -->
+
+                    <img
+                        src="<?= $foto ?>"
+                        alt="Foto de perfil padrão"
+                        class="foto-perfil rounded-circle shadow-sm mb-3">
+
+
+                    <!-- NOME -->
+
+                    <h1 class="h3 fw-bold mb-2">
+                        <?= $usuario->nome ?>
+                    </h1>
+
+
+                    <!-- IDENTIFICAÇÃO -->
+
+                    <p class="mb-3 opacity-75">
+
+                        <i class="bi bi-mortarboard-fill me-1"></i>
+
+                        Aluno
+
+                    </p>
+
+
+                    <!-- STATUS -->
+
+
+                    <?php if ($usuario->ativo == true): ?>
+
+                        <span class="badge rounded-pill text-bg-success px-3 py-2">
+
+                            <i class="bi bi-check-circle-fill me-1"></i>
+
+                            Ativo
+
+                        </span>
+
+                    <?php else: ?>
+
+                        <span class="badge rounded-pill text-bg-danger px-3 py-2">
+
+                            <i class="bi bi-x-circle-fill me-1"></i>
+
+                            Desativado
+
+                        </span>
+
+                    <?php endif; ?>
+
+
+
                 </header>
 
-                <div class="card-body p-3 p-md-5">
-                    <section aria-labelledby="dados-pessoais" class="mb-5">
-                        <h2 id="dados-pessoais" class="h5 secao-perfil mb-3"><i class="bi bi-person-vcard me-2" aria-hidden="true"></i>Dados pessoais</h2>
+
+
+                <!-- =====================================
+                     CORPO DO PERFIL
+                ===================================== -->
+
+                <div class="card-body p-3 p-md-4 p-lg-5">
+
+
+                    <!-- =====================================
+                         DADOS PESSOAIS
+                    ===================================== -->
+
+                    <section class="mb-5">
+
+                        <h2 class="h5 secao-perfil mb-3">
+
+                            <i class="bi bi-person-vcard me-2"></i>
+
+                            Dados pessoais
+
+                        </h2>
+
+
                         <div class="row g-3">
+
+                            <!-- NOME -->
+
                             <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Nome completo</small><span class="fw-semibold"><?= $texto('nome') ?></span></div>
+
+                                <div class="campo-perfil">
+
+                                    <small class="campo-label">
+                                        Nome completo
+                                    </small>
+
+                                    <span class="campo-valor">
+                                        <?= $usuario->nome ?>
+                                    </span>
+
+                                </div>
+
                             </div>
+
+
+                            <!-- MATRÍCULA -->
+
                             <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Matrícula</small><span class="fw-semibold"><?= $texto('matricula') ?></span></div>
+
+                                <div class="campo-perfil">
+
+                                    <small class="campo-label">
+                                        Matrícula
+                                    </small>
+
+                                    <span class="campo-valor">
+                                        <?= $usuario->matricula ?>
+                                    </span>
+
+                                </div>
+
                             </div>
+
+
+                            <!-- DATA DE NASCIMENTO -->
+
                             <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Data de nascimento</small><span class="fw-semibold"><?= $texto('data_nascimento') ?></span></div>
+
+                                <div class="campo-perfil">
+
+                                    <small class="campo-label">
+                                        Data de nascimento
+                                    </small>
+
+                                    <span class="campo-valor">
+                                        <?= Controller::formatarData($usuario->data_nascimento, "d/m/Y") ?>
+                                    </span>
+
+                                </div>
+
                             </div>
+
+
+                            <!-- SÉRIE -->
+
                             <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Série</small><span class="fw-semibold"><?= $texto('serie') ?></span></div>
+
+                                <div class="campo-perfil">
+
+                                    <small class="campo-label">
+                                        Série
+                                    </small>
+
+                                    <span class="campo-valor">
+                                        <?= $usuario->serie ?>
+                                    </span>
+
+                                </div>
+
                             </div>
+
                         </div>
+
                     </section>
 
-                    <section aria-labelledby="acesso">
-                        <h2 id="acesso" class="h5 secao-perfil mb-3"><i class="bi bi-shield-lock me-2" aria-hidden="true"></i>Informações de acesso</h2>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Usuário de acesso</small><span class="fw-semibold"><?= $texto('usuario') ?></span></div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Situação da conta</small><?php if ($ativo === null || $ativo === ''): ?><span class="fw-semibold">Não informado</span><?php elseif ((int) $ativo === 1): ?><span class="badge text-bg-success">Ativa</span><?php else: ?><span class="badge text-bg-secondary">Inativa</span><?php endif; ?></div>
-                            </div>
-                            <div class="col-12">
-                                <div class="campo-perfil p-3"><small class="text-body-secondary d-block">Último acesso</small><span class="fw-semibold"><?= $texto('last_login') ?></span></div>
-                            </div>
-                        </div>
-                    </section>
 
-                    <div class="d-flex justify-content-end mt-4">
-                        <a href="/aluno/update" class="btn btn-primary"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Editar perfil</a>
-                    </div>
+
                 </div>
+
             </section>
+
         </div>
+
     </div>
+
 </main>

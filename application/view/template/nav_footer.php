@@ -1,3 +1,18 @@
+<?php
+
+$secao = (object)$_SESSION;
+
+// Verifica a autenticação uma única vez
+$logado = \controller\LoginController::logado();
+
+// Nome exibido no menu do usuário
+$nomeUsuario = htmlspecialchars(
+    (string) ($_SESSION['nome'] ?? 'Minha conta'),
+    ENT_QUOTES,
+    'UTF-8'
+);
+
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -177,27 +192,7 @@
 </head>
 
 
-<?php
-
-// Verifica a autenticação uma única vez
-$logado = \controller\LoginController::logado();
-
-// Nome exibido no menu do usuário
-$nomeUsuario = htmlspecialchars(
-    (string) ($_SESSION['nome'] ?? 'Minha conta'),
-    ENT_QUOTES,
-    'UTF-8'
-);
-
-?>
-
-
 <body class="bg-body-secondary d-flex flex-column min-vh-100">
-
-
-    <!-- ========================================
-         HEADER / NAVBAR
-    ======================================== -->
 
     <header class="bg-primary text-white shadow-sm">
 
@@ -205,13 +200,6 @@ $nomeUsuario = htmlspecialchars(
 
             <div class="container px-3 px-sm-4 px-lg-5">
 
-
-                <!-- ========================================
-                     IDENTIDADE DO PORTAL
-
-                     MOBILE: APÓS O BOTÃO DE MENU
-                     DESKTOP: POSIÇÃO ORIGINAL
-                ======================================== -->
 
                 <a href="/"
                     class="navbar-brand portal-brand d-flex align-items-center gap-2 me-0 order-2 order-lg-0">
@@ -241,11 +229,9 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-                <!-- ========================================
-                     BOTÃO MOBILE / TABLET
 
-                     POSICIONADO À ESQUERDA
-                ======================================== -->
+                <!-- BOTÃO MOBILE / TABLET -->
+
 
                 <div class="d-flex d-lg-none align-items-center order-1 me-2">
 
@@ -266,9 +252,7 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-                <!-- ========================================
-                     MENU DESKTOP
-                ======================================== -->
+                <!-- MENU DESKTOP -->
 
                 <div class="d-none d-lg-flex align-items-center flex-grow-1">
 
@@ -338,9 +322,7 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-                    <!-- ========================================
-                         AUTENTICAÇÃO DESKTOP
-                    ======================================== -->
+                    <!-- AUTENTICAÇÃO DESKTOP -->
 
                     <?php if ($logado): ?>
 
@@ -386,7 +368,7 @@ $nomeUsuario = htmlspecialchars(
 
                                 </li>
 
-
+                                <?php if(isset($_SESSION['id_tipo_adm'])):?>
 
                                 <li>
 
@@ -425,6 +407,7 @@ $nomeUsuario = htmlspecialchars(
                                     <hr class="dropdown-divider">
 
                                 </li>
+                                <?php endif; ?>
 
 
 
@@ -479,10 +462,7 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-    <!-- ========================================
-         MENU LATERAL MOBILE / TABLET
-         ABERTURA PELA ESQUERDA
-    ======================================== -->
+    <!-- MENU LATERAL MOBILE / TABLET -->
 
     <div
         class="offcanvas offcanvas-start portal-offcanvas d-lg-none"
@@ -490,10 +470,6 @@ $nomeUsuario = htmlspecialchars(
         id="menuMobile"
         aria-labelledby="menuMobileLabel">
 
-
-        <!-- ========================================
-             CABEÇALHO DO MENU
-        ======================================== -->
 
         <div class="offcanvas-header bg-primary text-white">
 
@@ -530,22 +506,11 @@ $nomeUsuario = htmlspecialchars(
         </div>
 
 
-
-        <!-- ========================================
-             CORPO DO MENU
-        ======================================== -->
-
         <div class="offcanvas-body d-flex flex-column">
 
 
-            <!-- ========================================
-                 IDENTIFICAÇÃO DO USUÁRIO
-            ======================================== -->
 
             <?php if ($logado): ?>
-
-
-                <!-- PERFIL AUTENTICADO -->
 
                 <div class="user-profile-card p-3 mb-4">
 
@@ -558,8 +523,6 @@ $nomeUsuario = htmlspecialchars(
                             <i class="bi bi-person-fill fs-4"></i>
 
                         </div>
-
-
 
                         <div class="flex-grow-1">
 
@@ -631,9 +594,7 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-            <!-- ========================================
-                 NAVEGAÇÃO PÚBLICA
-            ======================================== -->
+            <!--  NAVEGAÇÃO PÚBLICA -->
 
             <div class="menu-section-title mb-2 px-3">
 
@@ -728,9 +689,7 @@ $nomeUsuario = htmlspecialchars(
 
 
 
-            <!-- ========================================
-                 ÁREA DO USUÁRIO AUTENTICADO
-            ======================================== -->
+            <!-- ÁREA DO USUÁRIO AUTENTICADO -->
 
             <?php if ($logado): ?>
 
@@ -766,7 +725,7 @@ $nomeUsuario = htmlspecialchars(
                     </li>
 
 
-
+                    <?php if(isset($_SESSION['id_tipo_adm'])): ?>
                     <!-- NOTÍCIAS, EVENTOS E AVISOS -->
 
                     <li class="nav-item">
@@ -800,6 +759,7 @@ $nomeUsuario = htmlspecialchars(
                         </a>
 
                     </li>
+                    <?php endif; ?>
 
 
                 </ul>

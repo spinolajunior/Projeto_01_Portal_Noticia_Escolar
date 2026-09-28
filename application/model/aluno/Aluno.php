@@ -10,10 +10,9 @@ final class Aluno
     public ?string $foto = null;
     public string $nome;
 
-    public string $id_ano;
     public string $matricula;
     public string $data_nascimento;
-    public string $serie;
+    public string $id_serie;
     public ?int $id_credenciais = null;
 
     public function get(): Aluno|bool

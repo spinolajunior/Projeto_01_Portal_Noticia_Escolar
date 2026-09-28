@@ -2,13 +2,11 @@
 
 use controller\HomeController;
 use controller\noticia\NoticiaController;
-use controller\aluno\AlunoController;
-use controller\administrador\AdministradorController;
 use controller\aviso\AvisoController;
 use controller\evento\EventoController;
 use controller\UsuarioController;
 use controller\LoginController;
-use model\aviso\Aviso;
+
 
 $uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
@@ -32,24 +30,17 @@ switch ($uri) {
         HomeController::paginaGerenciamento();
         break;
 
-    case "/cadastro/aluno":
-        AlunoController::insert();
+    case "/cadastro/usuario":
+        UsuarioController::cadastroUsuario();
         break;
-    case "/atualizar/aluno":
-        AlunoController::update();
+    case "/atualizar/usuario":
+        // chamado do controler para atualizar usuario...
         break;
-    case "/excluir/aluno":
+    case "/excluir/usuario":
         break;
 
 
-    case "/cadastro/administrador":
-        AdministradorController::insert();
-        break;
-    case "/atualizar/administrador":
-        AdministradorController::update();
-        break;
-    case "/excluir/administrador":
-        break;
+   
 
 
     case "/noticias":
