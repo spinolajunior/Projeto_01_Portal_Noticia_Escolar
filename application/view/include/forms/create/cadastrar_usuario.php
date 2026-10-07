@@ -528,7 +528,7 @@ if (!is_iterable($series)) {
                         class="d-flex justify-content-end gap-2 cadastro-acoes">
 
                         <a
-                            href="/"
+                            href="/painel/gerenciamento"
                             class="btn btn-outline-secondary px-4">
                             <i class="bi bi-arrow-left me-1"></i>
                             Voltar
@@ -553,11 +553,6 @@ if (!is_iterable($series)) {
 
 </main>
 
-
-
-<!-- ====================================== -->
-<!-- JAVASCRIPT -->
-<!-- ====================================== -->
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

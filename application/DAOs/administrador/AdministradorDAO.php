@@ -24,16 +24,12 @@ class AdministradorDAO extends DAO
     {
         $query = "UPDATE administrador SET
                   nome = ?,
-                  matricula = ?,
-                  id_credenciais = ?,
-                  id_tipo_adm = ?,
+                  matricula = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
-        $stmt->bindValue(3, $model->id_credenciais);
-        $stmt->bindValue(4, $model->id_tipo_adm);
-        $stmt->bindValue(5, $model->id);
+        $stmt->bindValue(3, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
     }
     public function delete(int $id): bool
@@ -60,13 +56,20 @@ class AdministradorDAO extends DAO
         return $stmt->fetchAll(PDO::FETCH_CLASS, Administrador::class);
     }
 
-    public function idCredConf(int $id): bool|Administrador{
-       $query = "SELECT * FROM administrador where id_credenciais = ?;";
-       $stmt = $this->pdo->prepare($query);
-       $stmt->bindValue(1, $id);
-       $stmt->execute();
-       $administrador = $stmt->fetchObject(Administrador::class);
-       return $administrador!== false ? $administrador : false;
-
+    public function idCredConf(int $id): bool|Administrador
+    {
+        $query = "SELECT * FROM administrador where id_credenciais = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $administrador = $stmt->fetchObject(Administrador::class);
+        return $administrador !== false ? $administrador : false;
+    }
+    public function admStatus(): array|bool
+    {
+        $query = "SELECT administrador.*,credenciais.ativo FROM administrador 
+                 INNER JOIN credenciais ON administrador.id_credenciais = credenciais.id;";
+        $stmt  = $this->pdo->prepare($query);
+        return ($stmt->execute()) ? $stmt->fetchAll(PDO::FETCH_CLASS, Administrador::class) : false;
     }
 }

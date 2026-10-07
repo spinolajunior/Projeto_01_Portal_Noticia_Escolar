@@ -23,21 +23,21 @@ class AlunoDAO extends DAO
     }
     public function update(Aluno $model): Aluno|bool
     {
+        
         $query = "UPDATE aluno SET
                   nome = ?,
                   matricula = ?,
                   data_nascimento = ?,
-                  id_serie = ?,
-                  id_credenciais = ?
+                  id_serie = ?
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->nome);
         $stmt->bindValue(2, $model->matricula);
         $stmt->bindValue(3, $model->data_nascimento);
         $stmt->bindValue(4, $model->id_serie);
-        $stmt->bindValue(5, $model->id_credenciais);
-        $stmt->bindValue(6, $model->id);
+        $stmt->bindValue(5, $model->id);
         return ($stmt->execute()) ? $this->getById($model->id) : false;
+
     }
     public function delete(int $id): bool
     {
@@ -63,13 +63,21 @@ class AlunoDAO extends DAO
         return $stmt->fetchAll(PDO::FETCH_CLASS, Aluno::class);
     }
 
-    public function idCredConf(int $id): bool|Aluno{
-       $query = "SELECT * FROM aluno where id_credenciais = ?;";
-       $stmt = $this->pdo->prepare($query);
-       $stmt->bindValue(1, $id);
-       $stmt->execute();
-       $aluno = $stmt->fetchObject(Aluno::class);
-       return $aluno !== false ? $aluno : false;
+    public function idCredConf(int $id): bool|Aluno
+    {
+        $query = "SELECT * FROM aluno where id_credenciais = ?;";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindValue(1, $id);
+        $stmt->execute();
+        $aluno = $stmt->fetchObject(Aluno::class);
+        return $aluno !== false ? $aluno : false;
+    }
 
+    public function alunoStatus(): array|bool
+    {
+        $query = "SELECT aluno.*,credenciais.ativo FROM aluno 
+                 INNER JOIN credenciais ON aluno.id_credenciais = credenciais.id;";
+        $stmt  = $this->pdo->prepare($query);
+        return ($stmt->execute())?$stmt->fetchAll(PDO::FETCH_CLASS,Aluno::class):false;
     }
 }

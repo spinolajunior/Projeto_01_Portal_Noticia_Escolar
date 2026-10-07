@@ -263,7 +263,27 @@ $foto = ($usuario->foto !== null) ? $usuario->foto : "/view/img/upload/perfil_us
 
                             </div>
 
+                            
+                                <div class="col-12 col-md-6">
+
+                                    <div class="campo-perfil">
+
+                                        <small class="campo-label">
+                                            Nível de acesso
+                                        </small>
+
+                                        <span class="campo-valor">
+                                            <?= (isset($usuario->acesso))?$usuario->acesso:0 ?>
+                                        </span>
+
+                                    </div>
+
+                                </div>
+                        
                         </div>
+
+
+
 
                     </section>
 

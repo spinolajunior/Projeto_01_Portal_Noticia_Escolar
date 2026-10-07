@@ -49,4 +49,8 @@ final class Credenciais
     public function updateLastLogin(): bool{
         return new CredenciaisDAO()->updateLastLogin($this->id);
     }
+
+    public function bloquearAcesso():bool{
+        return new CredenciaisDAO()->bloquearAcesso($this->id);
+    }
 }

@@ -2,24 +2,80 @@
 
 $avisos = $model["avisos"] ?? [];
 
+if (!is_iterable($avisos)) {
+    $avisos = [];
+}
+
+$quantidadeAvisos = is_countable($avisos)
+    ? count($avisos)
+    : 0;
+
 ?>
 
 <main class="container-fluid py-3 py-md-4">
 
     <style>
-        /* ====================================
-           TABELA DESKTOP
-        ==================================== */
-
-        .tabela-gerenciamento thead th {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: #fff;
-            font-weight: 600;
+        .painel-cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        .tabela-gerenciamento tbody td {
-            background-color: #fff;
+        .painel-cabecalho h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .painel-acoes {
+            display: flex;
+            gap: .6rem;
+        }
+
+        .painel-card {
+            border: 0;
+            border-radius: .8rem;
+            overflow: hidden;
+        }
+
+        .painel-card-header {
+            background-color: #0d6efd;
+            color: #fff;
+            padding: .9rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+        }
+
+        .painel-card-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .quantidade-registros {
+            background-color: rgba(255, 255, 255, .2);
+            padding: .2rem .55rem;
+            border-radius: 2rem;
+            font-size: .75rem;
+            white-space: nowrap;
+        }
+
+        .tabela-gerenciamento {
+            margin-bottom: 0;
+        }
+
+        .tabela-gerenciamento thead th {
+            background-color: #e9f2ff;
+            color: #212529;
+            font-weight: 600;
+            border-bottom: 2px solid #0d6efd;
+            white-space: nowrap;
+            vertical-align: middle;
+            height: 48px;
         }
 
         .tabela-gerenciamento th:not(:last-child),
@@ -28,67 +84,64 @@ $avisos = $model["avisos"] ?? [];
         }
 
         .tabela-gerenciamento thead th:not(:last-child) {
-            border-right-color: rgba(255, 255, 255, .35);
+            border-right: 1px solid #c7d7ee;
         }
 
         .tabela-gerenciamento tbody tr {
-            transition: box-shadow .18s ease;
+            height: 58px;
+            transition: background-color .18s ease;
         }
 
-        .tabela-gerenciamento tbody tr:hover {
-            box-shadow: inset 4px 0 0 #0d6efd;
+        .tabela-gerenciamento tbody td {
+            background-color: #fff;
+            vertical-align: middle;
         }
 
         .tabela-gerenciamento tbody tr:hover td {
-            background-color: #eef5ff;
+            background-color: #f8fbff;
         }
 
-        /* ====================================
-           BOTÕES
-        ==================================== */
+        .titulo-aviso-desktop {
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .status-aviso {
+            font-size: .75rem;
+            font-weight: 600;
+            min-width: 85px;
+            display: inline-block;
+        }
+
+        .acoes-tabela {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: .45rem;
+            white-space: nowrap;
+        }
 
         .acao-tabela {
-            border-radius: .45rem;
-            text-decoration: none;
-            transition: all .18s ease;
+            border-radius: .4rem;
+            transition: transform .18s ease;
         }
 
         .acao-tabela:hover {
             transform: translateY(-1px);
         }
 
-        /* ====================================
-           STATUS
-        ==================================== */
-
-        .status-aviso {
-            font-size: .75rem;
-            font-weight: 600;
-            padding: .45rem .75rem;
-            min-width: 85px;
-            display: inline-block;
-        }
-
-        /* ====================================
-           CARDS MOBILE
-        ==================================== */
-
         .card-aviso-mobile {
-            border: 1px solid #e2e8f0;
-            border-radius: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: .8rem;
             overflow: hidden;
             background-color: #fff;
-            transition: box-shadow .2s ease;
-        }
-
-        .card-aviso-mobile:hover {
-            box-shadow: 0 .35rem 1rem rgba(0, 0, 0, .08);
         }
 
         .card-aviso-mobile .card-header {
             background-color: #0d6efd;
             color: #fff;
             border: 0;
+            padding: .9rem 1rem;
         }
 
         .card-aviso-mobile .titulo-aviso {
@@ -101,7 +154,7 @@ $avisos = $model["avisos"] ?? [];
         .card-aviso-mobile .info-label {
             color: #6c757d;
             font-size: .78rem;
-            margin-bottom: .2rem;
+            margin-bottom: .15rem;
         }
 
         .card-aviso-mobile .info-valor {
@@ -115,25 +168,54 @@ $avisos = $model["avisos"] ?? [];
             color: #0d6efd;
         }
 
-        .card-aviso-mobile .acoes-mobile .btn {
-            min-width: 0;
-            padding: .6rem .4rem;
+        .acoes-mobile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
         }
 
-        /* ====================================
-           TELAS PEQUENAS
-        ==================================== */
+        .acoes-mobile .btn {
+            width: 100%;
+        }
+
+        .estado-vazio {
+            padding: 3rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .estado-vazio i {
+            display: block;
+            font-size: 2.5rem;
+            margin-bottom: .75rem;
+        }
+
+        @media (max-width: 767.98px) {
+
+            .painel-cabecalho {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .painel-cabecalho h1 {
+                font-size: 1.35rem;
+            }
+
+            .painel-acoes {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .painel-acoes .btn {
+                width: 100%;
+            }
+        }
 
         @media (max-width: 575.98px) {
 
-            .cabecalho-painel .btn {
-                width: 100%;
+            .painel-acoes {
+                grid-template-columns: 1fr;
             }
-
-            .card-aviso-mobile .card-body {
-                padding: 1rem;
-            }
-
         }
     </style>
 
@@ -141,334 +223,319 @@ $avisos = $model["avisos"] ?? [];
 
         <div class="col-12 col-xxl-10">
 
-            <!-- ====================================
-                 CABEÇALHO
-            ==================================== -->
-
-            <div class="cabecalho-painel d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+            <div class="painel-cabecalho">
 
                 <div>
 
-                    <h1 class="h3 mb-1">
+                    <h1>
+                        <i class="bi bi-megaphone-fill text-primary me-2"></i>
                         Avisos
                     </h1>
 
-                    <p class="text-body-secondary mb-0">
+                    <div class="text-body-secondary mt-1">
                         Gerencie os avisos publicados no portal.
-                    </p>
-
-                </div>
-
-                <a
-                    href="/cadastro/aviso"
-                    class="btn btn-primary">
-
-                    <i class="bi bi-plus-circle me-1"></i>
-                    Novo Aviso
-
-                </a>
-
-            </div>
-
-
-            <?php if (empty($avisos)): ?>
-
-                <!-- NENHUM AVISO -->
-
-                <div class="card border-0 shadow-sm">
-
-                    <div class="card-body text-center py-5">
-
-                        <i class="bi bi-megaphone fs-1 text-secondary d-block mb-3"></i>
-
-                        <h5 class="mb-2">
-                            Nenhum aviso cadastrado
-                        </h5>
-
-                        <p class="text-body-secondary mb-0">
-                            Cadastre um aviso para começar a gerenciar os comunicados.
-                        </p>
-
                     </div>
 
                 </div>
 
-            <?php else: ?>
+                <div class="painel-acoes">
 
+                    <a
+                        href="/painel/gerenciamento"
+                        class="btn btn-outline-secondary"
+                        onclick="return voltarPainel(event);">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
 
-                <!-- ====================================
-                     LAYOUT DESKTOP
-                ==================================== -->
+                    <a
+                        href="/cadastro/aviso"
+                        class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Novo Aviso
+                    </a>
 
-                <div class="d-none d-lg-block">
+                </div>
 
-                    <div class="card border-0 shadow-sm">
+            </div>
 
-                        <div class="card-body p-0">
+            <div class="card shadow-sm painel-card">
 
-                            <div class="table-responsive">
+                <div class="painel-card-header">
 
-                                <table class="table table-hover align-middle mb-0 tabela-gerenciamento">
+                    <h2>
+                        <i class="bi bi-megaphone me-2"></i>
+                        Avisos cadastrados
+                    </h2>
 
-                                    <thead>
+                    <span class="quantidade-registros">
+
+                        <?= $quantidadeAvisos ?>
+
+                        <?= $quantidadeAvisos === 1
+                            ? "registro"
+                            : "registros" ?>
+
+                    </span>
+
+                </div>
+
+                <?php if ($quantidadeAvisos === 0): ?>
+
+                    <div class="estado-vazio">
+
+                        <i class="bi bi-megaphone"></i>
+
+                        <strong>
+                            Nenhum aviso cadastrado
+                        </strong>
+
+                        <div class="small mt-1">
+                            Cadastre um aviso para começar a gerenciar os comunicados.
+                        </div>
+
+                    </div>
+
+                <?php else: ?>
+
+                    <div class="d-none d-lg-block">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover tabela-gerenciamento">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th class="ps-3 ps-md-4">
+                                            ID
+                                        </th>
+
+                                        <th>
+                                            Título
+                                        </th>
+
+                                        <th class="text-center">
+                                            Status
+                                        </th>
+
+                                        <th class="text-center pe-3 pe-md-4">
+                                            Ações
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    <?php foreach ($avisos as $aviso): ?>
 
                                         <tr>
 
-                                            <th scope="col" class="ps-3 ps-md-4">
-                                                ID
-                                            </th>
+                                            <td class="ps-3 ps-md-4">
+                                                <?= (int) $aviso->id ?>
+                                            </td>
 
-                                            <th scope="col">
-                                                Título
-                                            </th>
+                                            <td style="min-width: 180px;">
 
-                                            <th scope="col" class="text-center">
-                                                Status
-                                            </th>
+                                                <div class="titulo-aviso-desktop">
 
-                                            <th scope="col" class="pe-3 pe-md-4 text-center">
-                                                Ações
-                                            </th>
+                                                    <i class="bi bi-megaphone text-primary me-1"></i>
 
-                                        </tr>
+                                                    <?= htmlspecialchars(
+                                                        $aviso->titulo,
+                                                        ENT_QUOTES,
+                                                        "UTF-8"
+                                                    ) ?>
 
-                                    </thead>
+                                                </div>
 
-                                    <tbody>
+                                            </td>
 
-                                        <?php foreach ($avisos as $aviso): ?>
+                                            <td class="text-center">
 
-                                            <tr>
+                                                <?php if ($aviso->ativo === null): ?>
 
-                                                <!-- ID -->
-                                                <td class="ps-3 ps-md-4">
+                                                    <span class="badge text-bg-secondary status-aviso">
+                                                        Indefinido
+                                                    </span>
 
-                                                    <?= (int) $aviso->id ?>
+                                                <?php elseif ((int) $aviso->ativo === 1): ?>
 
-                                                </td>
+                                                    <span class="badge text-bg-success status-aviso">
 
-                                                <!-- TÍTULO -->
-                                                <td style="min-width: 180px; overflow-wrap: anywhere;">
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        Ativo
 
-                                                    <?= htmlspecialchars($aviso->titulo, ENT_QUOTES, 'UTF-8') ?>
+                                                    </span>
 
-                                                </td>
+                                                <?php else: ?>
 
-                                                <!-- STATUS -->
-                                                <td class="text-center text-nowrap">
+                                                    <span class="badge text-bg-danger status-aviso">
 
-                                                    <?php if ($aviso->ativo === null): ?>
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        Inativo
 
-                                                        <span class="badge rounded-pill bg-secondary status-aviso">
+                                                    </span>
 
-                                                            Não definido
+                                                <?php endif; ?>
 
-                                                        </span>
+                                            </td>
 
-                                                    <?php elseif ((int) $aviso->ativo === 1): ?>
+                                            <td class="pe-3 pe-md-4">
 
-                                                        <span class="badge rounded-pill bg-success status-aviso">
-
-                                                            <i class="bi bi-check-circle me-1"></i>
-                                                            Ativo
-
-                                                        </span>
-
-                                                    <?php else: ?>
-
-                                                        <span class="badge rounded-pill bg-danger status-aviso">
-
-                                                            <i class="bi bi-x-circle me-1"></i>
-                                                            Inativo
-
-                                                        </span>
-
-                                                    <?php endif; ?>
-
-                                                </td>
-
-
-                                                <!-- AÇÕES -->
-                                                <td class="pe-3 pe-md-4 text-center text-nowrap">
+                                                <div class="acoes-tabela">
 
                                                     <a
                                                         href="/atualizar/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-sm btn-outline-primary acao-tabela me-1">
-
+                                                        class="btn btn-warning btn-sm acao-tabela"
+                                                        title="Editar aviso">
                                                         <i class="bi bi-pencil-square me-1"></i>
                                                         Editar
-
                                                     </a>
 
                                                     <a
                                                         href="/excluir/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-sm btn-outline-danger acao-tabela"
+                                                        class="btn btn-danger btn-sm acao-tabela"
+                                                        title="Excluir aviso"
                                                         onclick="return confirm('Deseja realmente excluir este aviso?');">
-
-                                                        <i class="bi bi-trash3 me-1"></i>
+                                                        <i class="bi bi-trash-fill me-1"></i>
                                                         Excluir
-
                                                     </a>
 
-                                                </td>
+                                                </div>
 
-                                            </tr>
+                                            </td>
 
-                                        <?php endforeach; ?>
+                                        </tr>
 
-                                    </tbody>
+                                    <?php endforeach; ?>
 
-                                </table>
+                                </tbody>
 
-                            </div>
+                            </table>
 
                         </div>
 
                     </div>
 
-                </div>
+                    <div class="d-lg-none p-3">
 
+                        <div class="row g-3">
 
-                <!-- ====================================
-                     LAYOUT MOBILE / TABLET
-                ==================================== -->
+                            <?php foreach ($avisos as $aviso): ?>
 
-                <div class="d-lg-none">
+                                <div class="col-12 col-md-6">
 
-                    <div class="row g-3">
+                                    <article class="card card-aviso-mobile h-100 shadow-sm">
 
-                        <?php foreach ($avisos as $aviso): ?>
+                                        <div class="card-header">
 
-                            <div class="col-12 col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center gap-2">
 
-                                <article class="card card-aviso-mobile h-100 shadow-sm">
+                                                <span class="fw-semibold">
 
-                                    <!-- CABEÇALHO DO CARD -->
-                                    <div class="card-header p-3">
+                                                    <i class="bi bi-megaphone me-1"></i>
 
-                                        <div class="d-flex justify-content-between align-items-center gap-2">
-
-                                            <span class="fw-semibold">
-
-                                                <i class="bi bi-megaphone me-1"></i>
-
-                                                Aviso #<?= (int) $aviso->id ?>
-
-                                            </span>
-
-
-                                            <!-- STATUS -->
-                                            <?php if ($aviso->ativo === null): ?>
-
-                                                <span class="badge rounded-pill bg-secondary status-aviso">
-
-                                                    Não definido
+                                                    Aviso #<?= (int) $aviso->id ?>
 
                                                 </span>
 
-                                            <?php elseif ((int) $aviso->ativo === 1): ?>
+                                                <?php if ($aviso->ativo === null): ?>
 
-                                                <span class="badge rounded-pill bg-success status-aviso">
+                                                    <span class="badge text-bg-secondary status-aviso">
+                                                        Indefinido
+                                                    </span>
 
-                                                    <i class="bi bi-check-circle me-1"></i>
-                                                    Ativo
+                                                <?php elseif ((int) $aviso->ativo === 1): ?>
 
-                                                </span>
+                                                    <span class="badge text-bg-success status-aviso">
 
-                                            <?php else: ?>
-
-                                                <span class="badge rounded-pill bg-danger status-aviso">
-
-                                                    <i class="bi bi-x-circle me-1"></i>
-                                                    Inativo
-
-                                                </span>
-
-                                            <?php endif; ?>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <!-- CONTEÚDO -->
-                                    <div class="card-body d-flex flex-column">
-
-                                        <!-- TÍTULO -->
-                                        <h2 class="titulo-aviso h6 mb-3">
-
-                                            <?= htmlspecialchars($aviso->titulo, ENT_QUOTES, 'UTF-8') ?>
-
-                                        </h2>
-
-                                        <hr class="my-2">
-
-
-                                        <!-- SITUAÇÃO -->
-                                        <div class="d-flex align-items-start gap-2 mb-3 mt-2">
-
-                                            <i class="bi bi-info-circle icone-info fs-5"></i>
-
-                                            <div class="flex-grow-1" style="min-width: 0;">
-
-                                                <div class="info-label">
-                                                    Situação do aviso
-                                                </div>
-
-                                                <div class="info-valor fw-medium">
-
-                                                    <?php if ($aviso->ativo === null): ?>
-
-                                                        Não definida
-
-                                                    <?php elseif ((int) $aviso->ativo === 1): ?>
-
+                                                        <i class="bi bi-check-circle me-1"></i>
                                                         Ativo
 
-                                                    <?php else: ?>
+                                                    </span>
 
+                                                <?php else: ?>
+
+                                                    <span class="badge text-bg-danger status-aviso">
+
+                                                        <i class="bi bi-x-circle me-1"></i>
                                                         Inativo
 
-                                                    <?php endif; ?>
+                                                    </span>
 
-                                                </div>
+                                                <?php endif; ?>
 
                                             </div>
 
                                         </div>
 
+                                        <div class="card-body d-flex flex-column">
 
-                                        <!-- BOTÕES -->
-                                        <div class="mt-auto pt-3 border-top">
+                                            <h2 class="titulo-aviso h6 mb-3">
 
-                                            <div class="row g-2 acoes-mobile">
+                                                <?= htmlspecialchars(
+                                                    $aviso->titulo,
+                                                    ENT_QUOTES,
+                                                    "UTF-8"
+                                                ) ?>
 
-                                                <!-- EDITAR -->
-                                                <div class="col-6">
+                                            </h2>
+
+                                            <div class="d-flex align-items-start gap-2 mb-3">
+
+                                                <i class="bi bi-info-circle icone-info fs-5"></i>
+
+                                                <div
+                                                    class="flex-grow-1"
+                                                    style="min-width: 0;">
+
+                                                    <div class="info-label">
+                                                        Situação do aviso
+                                                    </div>
+
+                                                    <div class="info-valor fw-medium">
+
+                                                        <?php if ($aviso->ativo === null): ?>
+
+                                                            Não definida
+
+                                                        <?php elseif ((int) $aviso->ativo === 1): ?>
+
+                                                            Ativo
+
+                                                        <?php else: ?>
+
+                                                            Inativo
+
+                                                        <?php endif; ?>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div class="mt-auto pt-3 border-top">
+
+                                                <div class="acoes-mobile">
 
                                                     <a
                                                         href="/atualizar/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-outline-primary w-100 acao-tabela">
-
+                                                        class="btn btn-warning">
                                                         <i class="bi bi-pencil-square me-1"></i>
                                                         Editar
-
                                                     </a>
-
-                                                </div>
-
-
-                                                <!-- EXCLUIR -->
-                                                <div class="col-6">
 
                                                     <a
                                                         href="/excluir/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-outline-danger w-100 acao-tabela"
+                                                        class="btn btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir este aviso?');">
-
-                                                        <i class="bi bi-trash3 me-1"></i>
+                                                        <i class="bi bi-trash-fill me-1"></i>
                                                         Excluir
-
                                                     </a>
 
                                                 </div>
@@ -477,22 +544,35 @@ $avisos = $model["avisos"] ?? [];
 
                                         </div>
 
-                                    </div>
+                                    </article>
 
-                                </article>
+                                </div>
 
-                            </div>
+                            <?php endforeach; ?>
 
-                        <?php endforeach; ?>
+                        </div>
 
                     </div>
 
-                </div>
+                <?php endif; ?>
 
-            <?php endif; ?>
+            </div>
 
         </div>
 
     </div>
 
 </main>
+
+<script>
+    function voltarPainel(event) {
+
+        if (window.history.length > 1) {
+            event.preventDefault();
+            window.history.back();
+            return false;
+        }
+
+        return true;
+    }
+</script>

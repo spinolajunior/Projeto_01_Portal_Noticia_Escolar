@@ -2,7 +2,7 @@
 
 $secao = (object)$_SESSION;
 
-// Verifica a autenticação uma única vez
+// Verifica se o usuario esta logado para aplicar a logica do botão ou acesso ao dropdown do usuario.
 $logado = \controller\LoginController::logado();
 
 // Nome exibido no menu do usuário
@@ -26,16 +26,13 @@ $nomeUsuario = htmlspecialchars(
         <?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>
     </title>
 
-    <!-- FAVICON -->
     <link rel="icon"
         href="/view/img/logo_estado_da_bahia.png"
         type="image/png">
 
-    <!-- BOOTSTRAP 5.3.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
 
-    <!-- BOOTSTRAP ICONS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         rel="stylesheet">
 
@@ -368,45 +365,45 @@ $nomeUsuario = htmlspecialchars(
 
                                 </li>
 
-                                <?php if(isset($_SESSION['id_tipo_adm'])):?>
+                                <?php if (isset($_SESSION['id_tipo_adm']) || (isset($_SESSION['acesso']))): ?>
 
-                                <li>
+                                    <li>
 
-                                    <a
-                                        class="dropdown-item d-flex align-items-center gap-2"
-                                        href="/painel/noticia_evento_aviso">
+                                        <a
+                                            class="dropdown-item d-flex align-items-center gap-2"
+                                            href="/painel/noticia_evento_aviso">
 
-                                        <i class="bi bi-megaphone text-primary"></i>
+                                            <i class="bi bi-megaphone text-primary"></i>
 
-                                        <span>Notícias, Eventos e Avisos</span>
+                                            <span>Notícias, Eventos e Avisos</span>
 
-                                    </a>
+                                        </a>
 
-                                </li>
-
-
-
-                                <li>
-
-                                    <a
-                                        class="dropdown-item d-flex align-items-center gap-2"
-                                        href="/painel/gerenciamento">
-
-                                        <i class="bi bi-gear text-primary"></i>
-
-                                        <span>Área Administrativa</span>
-
-                                    </a>
-
-                                </li>
+                                    </li>
 
 
 
-                                <li>
+                                    <li>
 
-                                    <hr class="dropdown-divider">
+                                        <a
+                                            class="dropdown-item d-flex align-items-center gap-2"
+                                            href="/painel/gerenciamento">
 
-                                </li>
+                                            <i class="bi bi-gear text-primary"></i>
+
+                                            <span>Área Administrativa</span>
+
+                                        </a>
+
+                                    </li>
+
+
+
+                                    <li>
+
+                                        <hr class="dropdown-divider">
+
+                                    </li>
                                 <?php endif; ?>
 
 
@@ -458,11 +455,6 @@ $nomeUsuario = htmlspecialchars(
         </nav>
 
     </header>
-
-
-
-
-    <!-- MENU LATERAL MOBILE / TABLET -->
 
     <div
         class="offcanvas offcanvas-start portal-offcanvas d-lg-none"
@@ -725,40 +717,40 @@ $nomeUsuario = htmlspecialchars(
                     </li>
 
 
-                    <?php if(isset($_SESSION['id_tipo_adm'])): ?>
-                    <!-- NOTÍCIAS, EVENTOS E AVISOS -->
+                    <?php if (isset($_SESSION['id_tipo_adm']) || isset($_SESSION['acesso'])): ?>
+                        <!-- NOTÍCIAS, EVENTOS E AVISOS -->
 
-                    <li class="nav-item">
+                        <li class="nav-item">
 
-                        <a
-                            class="nav-link"
-                            href="/painel/noticia_evento_aviso">
+                            <a
+                                class="nav-link"
+                                href="/painel/noticia_evento_aviso">
 
-                            <i class="bi bi-megaphone"></i>
+                                <i class="bi bi-megaphone"></i>
 
-                            Notícias, Eventos e Avisos
+                                Notícias, Eventos e Avisos
 
-                        </a>
+                            </a>
 
-                    </li>
+                        </li>
 
 
 
-                    <!-- ÁREA ADMINISTRATIVA -->
+                        <!-- ÁREA ADMINISTRATIVA -->
 
-                    <li class="nav-item">
+                        <li class="nav-item">
 
-                        <a
-                            class="nav-link"
-                            href="/painel/gerenciamento">
+                            <a
+                                class="nav-link"
+                                href="/painel/gerenciamento">
 
-                            <i class="bi bi-gear"></i>
+                                <i class="bi bi-gear"></i>
 
-                            Área Administrativa
+                                Área Administrativa
 
-                        </a>
+                            </a>
 
-                    </li>
+                        </li>
                     <?php endif; ?>
 
 
@@ -835,22 +827,54 @@ $nomeUsuario = htmlspecialchars(
 
 
     </div>
+    <!-- mensagem para interação com usuario  -->
+    <?php if ($flash !== null): ?>
 
+        <div class="container mt-3">
 
+            <div
+                class="alert alert-<?= htmlspecialchars(
+                                        $flash['tipo'],
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?> alert-dismissible fade show shadow-sm"
+                role="alert">
 
+                <?php if ($flash['tipo'] === "success"): ?>
 
-    <!-- ========================================
-         CONTEÚDO PRINCIPAL
-    ======================================== -->
+                    <i class="bi bi-check-circle-fill me-2"></i>
 
+                <?php elseif ($flash['tipo'] === "warning"): ?>
+
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+                <?php else: ?>
+
+                    <i class="bi bi-x-circle-fill me-2"></i>
+
+                <?php endif; ?>
+
+                <?= htmlspecialchars(
+                    $flash['msg'],
+                    ENT_QUOTES,
+                    "UTF-8"
+                ) ?>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Fechar"></button>
+
+            </div>
+
+        </div>
+
+    <?php endif; ?>
+
+    <!--  Main -> conteudo principal -->
     <?= $content ?>
 
-
-
-
-    <!-- ========================================
-         FOOTER
-    ======================================== -->
 
     <footer class="bg-dark text-white text-center py-1 mt-auto">
 
@@ -880,20 +904,9 @@ $nomeUsuario = htmlspecialchars(
     </footer>
 
 
-
-
-    <!-- ========================================
-         BOOTSTRAP JAVASCRIPT
-    ======================================== -->
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
-
-
-    <!-- ========================================
-         MOSTRAR / OCULTAR SENHA
-    ======================================== -->
 
     <script>
         const togglePassword = document.querySelector('#togglePassword');

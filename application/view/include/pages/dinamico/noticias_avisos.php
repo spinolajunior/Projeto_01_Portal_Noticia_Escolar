@@ -1,21 +1,26 @@
 <?php
 
-// ==========================================
-// DADOS RECEBIDOS DO CONTROLLER
-// ==========================================
-
 $noticias = $model["noticias"] ?? [];
 $destaques = array_values($model["destaques"] ?? []);
-$eventos = $model["eventos"] ?? [];
 
-// Somente avisos ativos aparecem na Home.
-$avisos = array_values(array_filter(
-    $model["avisos"] ?? [],
-    static fn($aviso) =>
-    isset($aviso->ativo) && (int) $aviso->ativo === 1
-));
+$eventos = array_values($model["eventos"] ?? []);
+$gruposEventos = array_chunk($eventos, 3);
 
-$totalPaginas = max(0, (int) ($model["totalPaginas"] ?? 0));
+$avisos = array_values(
+    array_filter(
+        $model["avisos"] ?? [],
+        static fn($aviso) =>
+        isset($aviso->ativo) &&
+            (int) $aviso->ativo === 1
+    )
+);
+
+$gruposAvisos = array_chunk($avisos, 3);
+
+$totalPaginas = max(
+    0,
+    (int) ($model["totalPaginas"] ?? 0)
+);
 
 $pagina = max(
     1,
@@ -25,31 +30,18 @@ $pagina = max(
     )
 );
 
-
-// ==========================================
-// FORMATAÇÃO DAS DATAS
-// ==========================================
-
 $formatarDataHome = static function ($data): string {
 
     if (empty($data)) {
-        return 'Data não definida';
+        return "Data não definida";
     }
 
     try {
-
-        return (new DateTimeImmutable($data))
-            ->format('d/m/Y');
+        return (new DateTimeImmutable($data))->format("d/m/Y");
     } catch (Exception $e) {
-
-        return 'Data não definida';
+        return "Data não definida";
     }
 };
-
-
-// ==========================================
-// RESUMO DAS NOTÍCIAS
-// ==========================================
 
 $resumirNoticia = static function ($texto, int $limite): string {
 
@@ -65,17 +57,17 @@ $resumirNoticia = static function ($texto, int $limite): string {
         $texto,
         0,
         $limite,
-        'UTF-8'
+        "UTF-8"
     );
 
-    if (mb_strlen($texto, 'UTF-8') > $limite) {
-        $resumo .= '...';
+    if (mb_strlen($texto, "UTF-8") > $limite) {
+        $resumo .= "...";
     }
 
     return htmlspecialchars(
         $resumo,
         ENT_QUOTES,
-        'UTF-8'
+        "UTF-8"
     );
 };
 
@@ -84,10 +76,6 @@ $resumirNoticia = static function ($texto, int $limite): string {
 <main class="container my-4 home-portal">
 
     <style>
-        /* =====================================
-           CARROSSEL
-        ===================================== */
-
         .home-carousel {
             overflow: hidden;
             border-radius: 1rem;
@@ -103,17 +91,14 @@ $resumirNoticia = static function ($texto, int $limite): string {
             object-fit: cover;
         }
 
-        /* Gradiente para facilitar a leitura */
         .home-destaque-item::after {
             content: "";
             position: absolute;
             inset: 0;
-
             background: linear-gradient(to top,
                     rgba(0, 0, 0, .85),
                     rgba(0, 0, 0, .25) 60%,
                     transparent);
-
             pointer-events: none;
         }
 
@@ -138,31 +123,21 @@ $resumirNoticia = static function ($texto, int $limite): string {
             z-index: 3;
         }
 
-
-        /* =====================================
-           CARDS DE NOTÍCIAS
-        ===================================== */
-
         .home-noticia-card {
             border: 0;
             border-radius: .75rem;
             overflow: hidden;
-
-            transition:
-                transform .2s ease,
-                box-shadow .2s ease;
+            transition: transform .2s ease, box-shadow .2s ease;
         }
 
         .home-noticia-card:hover {
             transform: translateY(-3px);
-
-            box-shadow:
-                0 .5rem 1rem rgba(0, 0, 0, .12) !important;
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .12) !important;
         }
 
         .home-noticia-imagem {
-            height: 180px;
             width: 100%;
+            height: 180px;
             object-fit: cover;
         }
 
@@ -171,22 +146,21 @@ $resumirNoticia = static function ($texto, int $limite): string {
             overflow-wrap: anywhere;
         }
 
-
-        /* =====================================
-           BARRA LATERAL
-        ===================================== */
-
         .home-sidebar-card {
+            position: relative;
             border: 0;
             border-radius: .75rem;
             overflow: hidden;
         }
 
         .home-sidebar-card .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
             background-color: #0d6efd;
             color: #fff;
             border: 0;
-
             padding: .9rem 1rem;
             font-weight: 600;
         }
@@ -217,10 +191,53 @@ $resumirNoticia = static function ($texto, int $limite): string {
             color: #6c757d;
         }
 
+        .sidebar-controle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 46px;
+            border: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(13, 110, 253, .90);
+            color: #fff;
+            opacity: 0;
+            transition: opacity .2s ease, background-color .2s ease;
+        }
 
-        /* =====================================
-           ESTADOS VAZIOS
-        ===================================== */
+        .sidebar-controle:hover {
+            background-color: rgba(13, 110, 253, 1);
+            color: #fff;
+        }
+
+        .sidebar-controle-anterior {
+            left: 0;
+            border-radius: 0 .5rem .5rem 0;
+        }
+
+        .sidebar-controle-proximo {
+            right: 0;
+            border-radius: .5rem 0 0 .5rem;
+        }
+
+        .home-sidebar-card:hover .sidebar-controle {
+            opacity: 1;
+        }
+
+        .home-sidebar-card .carousel-item {
+            transition: transform .4s ease-in-out;
+        }
+
+        .sidebar-quantidade {
+            font-size: .7rem;
+            font-weight: 500;
+            padding: .2rem .45rem;
+            background-color: rgba(255, 255, 255, .2);
+            border-radius: 20px;
+        }
 
         .home-vazio {
             border: 1px dashed #d9e2ef;
@@ -233,13 +250,7 @@ $resumirNoticia = static function ($texto, int $limite): string {
             font-size: 2.5rem;
         }
 
-
-        /* =====================================
-           RESPONSIVIDADE
-        ===================================== */
-
         @media (max-width: 767.98px) {
-
             .home-destaque-imagem {
                 height: 320px;
             }
@@ -270,11 +281,9 @@ $resumirNoticia = static function ($texto, int $limite): string {
             .home-noticia-imagem {
                 height: 200px;
             }
-
         }
 
         @media (max-width: 575.98px) {
-
             .home-destaque-imagem {
                 height: 290px;
             }
@@ -290,14 +299,15 @@ $resumirNoticia = static function ($texto, int $limite): string {
             .home-carousel .carousel-caption {
                 bottom: 2rem;
             }
+        }
 
+        @media (hover: none),
+        (max-width: 991.98px) {
+            .sidebar-controle {
+                opacity: .9;
+            }
         }
     </style>
-
-
-    <!-- =====================================
-         DESTAQUES DA SEMANA
-    ===================================== -->
 
     <section class="mb-5">
 
@@ -305,13 +315,9 @@ $resumirNoticia = static function ($texto, int $limite): string {
             DESTAQUES DA SEMANA
         </h2>
 
-
         <?php if (empty($destaques)): ?>
 
-            <!-- NENHUM DESTAQUE -->
-
             <div class="home-vazio text-center p-4 p-md-5">
-
                 <i class="bi bi-newspaper icone-vazio d-block mb-3"></i>
 
                 <h5 class="fw-semibold mb-2">
@@ -321,21 +327,15 @@ $resumirNoticia = static function ($texto, int $limite): string {
                 <p class="text-body-secondary mb-0">
                     Ainda não há notícias em destaque no portal.
                 </p>
-
             </div>
 
         <?php else: ?>
-
-            <!-- CARROSSEL -->
 
             <div
                 id="carouselNoticias"
                 class="carousel slide carousel-fade home-carousel shadow-sm"
                 data-bs-ride="carousel"
                 data-bs-interval="10000">
-
-
-                <!-- INDICADORES -->
 
                 <?php if (count($destaques) > 1): ?>
 
@@ -347,10 +347,9 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                 type="button"
                                 data-bs-target="#carouselNoticias"
                                 data-bs-slide-to="<?= (int) $index ?>"
-                                class="<?= $index === 0 ? 'active' : '' ?>"
+                                class="<?= $index === 0 ? "active" : "" ?>"
                                 aria-label="Destaque <?= $index + 1 ?>"
-                                <?= $index === 0 ? 'aria-current="true"' : '' ?>>
-                            </button>
+                                <?= $index === 0 ? 'aria-current="true"' : '' ?>></button>
 
                         <?php endforeach; ?>
 
@@ -358,59 +357,54 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
                 <?php endif; ?>
 
-
-                <!-- ITENS DO CARROSSEL -->
-
                 <div class="carousel-inner">
 
                     <?php foreach ($destaques as $index => $noticia): ?>
 
-                        <div class="carousel-item home-destaque-item <?= $index === 0 ? 'active' : '' ?>">
-
-                            <!-- IMAGEM -->
+                        <div class="carousel-item home-destaque-item <?= $index === 0 ? "active" : "" ?>">
 
                             <img
-                                src="<?= htmlspecialchars($noticia->imagem . '.jpg', ENT_QUOTES, 'UTF-8') ?>"
+                                src="<?= htmlspecialchars(
+                                            $noticia->imagem . ".jpg",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>"
                                 class="d-block home-destaque-imagem"
-                                alt="<?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>">
-
-
-                            <!-- CONTEÚDO -->
+                                alt="<?= htmlspecialchars(
+                                            $noticia->titulo,
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>">
 
                             <div class="carousel-caption text-start">
 
                                 <small class="d-block mb-2">
-
                                     <i class="bi bi-calendar3 me-1"></i>
 
                                     Publicado em:
                                     <?= $formatarDataHome($noticia->data_pub) ?>
-
                                 </small>
 
-
                                 <h2>
-
-                                    <?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>
-
+                                    <?= htmlspecialchars(
+                                        $noticia->titulo,
+                                        ENT_QUOTES,
+                                        "UTF-8"
+                                    ) ?>
                                 </h2>
 
-
                                 <p class="mb-3">
-
-                                    <?= $resumirNoticia($noticia->descricao, 90) ?>
-
+                                    <?= $resumirNoticia(
+                                        $noticia->descricao,
+                                        90
+                                    ) ?>
                                 </p>
-
 
                                 <a
                                     href="/noticias?id=<?= (int) $noticia->id ?>"
                                     class="btn btn-primary">
-
                                     Leia Mais
-
                                     <i class="bi bi-arrow-right ms-1"></i>
-
                                 </a>
 
                             </div>
@@ -421,9 +415,6 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
                 </div>
 
-
-                <!-- CONTROLES -->
-
                 <?php if (count($destaques) > 1): ?>
 
                     <button
@@ -432,14 +423,10 @@ $resumirNoticia = static function ($texto, int $limite): string {
                         data-bs-target="#carouselNoticias"
                         data-bs-slide="prev"
                         aria-label="Destaque anterior">
-
                         <span
                             class="carousel-control-prev-icon"
-                            aria-hidden="true">
-                        </span>
-
+                            aria-hidden="true"></span>
                     </button>
-
 
                     <button
                         class="carousel-control-next"
@@ -447,12 +434,9 @@ $resumirNoticia = static function ($texto, int $limite): string {
                         data-bs-target="#carouselNoticias"
                         data-bs-slide="next"
                         aria-label="Próximo destaque">
-
                         <span
                             class="carousel-control-next-icon"
-                            aria-hidden="true">
-                        </span>
-
+                            aria-hidden="true"></span>
                     </button>
 
                 <?php endif; ?>
@@ -463,46 +447,17 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
     </section>
 
-
-
-    <!-- =====================================
-         NOTÍCIAS + BARRA LATERAL
-    ===================================== -->
-
     <section>
-
-        <!-- =====================================
-             CABEÇALHO COMPARTILHADO
-
-             O título fica fora da row para que
-             notícias e sidebar comecem alinhadas.
-        ===================================== -->
 
         <h2 class="fw-bold mb-4">
             ÚLTIMAS NOTÍCIAS
         </h2>
 
-
-        <!-- =====================================
-             CONTEÚDO PRINCIPAL
-
-             As duas colunas começam na mesma
-             linha do Grid do Bootstrap.
-        ===================================== -->
-
         <div class="row g-4 align-items-start">
-
-
-            <!-- =====================================
-                 COLUNA DAS NOTÍCIAS
-            ===================================== -->
 
             <div class="col-12 col-lg-9">
 
-
                 <?php if (empty($noticias)): ?>
-
-                    <!-- NENHUMA NOTÍCIA -->
 
                     <div class="home-vazio text-center p-4 p-md-5">
 
@@ -520,9 +475,6 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
                 <?php else: ?>
 
-
-                    <!-- CARDS -->
-
                     <div class="row g-4">
 
                         <?php foreach ($noticias as $noticia): ?>
@@ -531,17 +483,19 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
                                 <article class="card h-100 shadow-sm home-noticia-card">
 
-
-                                    <!-- IMAGEM -->
-
                                     <img
-                                        src="<?= htmlspecialchars($noticia->imagem . '.jpg', ENT_QUOTES, 'UTF-8') ?>"
+                                        src="<?= htmlspecialchars(
+                                                    $noticia->imagem . ".jpg",
+                                                    ENT_QUOTES,
+                                                    "UTF-8"
+                                                ) ?>"
                                         class="card-img-top home-noticia-imagem"
-                                        alt="<?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>"
+                                        alt="<?= htmlspecialchars(
+                                                    $noticia->titulo,
+                                                    ENT_QUOTES,
+                                                    "UTF-8"
+                                                ) ?>"
                                         loading="lazy">
-
-
-                                    <!-- CONTEÚDO -->
 
                                     <div class="card-body">
 
@@ -550,39 +504,40 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                             <i class="bi bi-calendar3 me-1"></i>
 
                                             Publicado em:
-                                            <?= $formatarDataHome($noticia->data_pub) ?>
+                                            <?= $formatarDataHome(
+                                                $noticia->data_pub
+                                            ) ?>
 
                                         </small>
 
-
                                         <h5 class="card-title mt-2 fw-semibold">
 
-                                            <?= htmlspecialchars($noticia->titulo, ENT_QUOTES, 'UTF-8') ?>
+                                            <?= htmlspecialchars(
+                                                $noticia->titulo,
+                                                ENT_QUOTES,
+                                                "UTF-8"
+                                            ) ?>
 
                                         </h5>
 
-
                                         <p class="card-text text-body-secondary">
 
-                                            <?= $resumirNoticia($noticia->descricao, 120) ?>
+                                            <?= $resumirNoticia(
+                                                $noticia->descricao,
+                                                120
+                                            ) ?>
 
                                         </p>
 
                                     </div>
-
-
-                                    <!-- RODAPÉ -->
 
                                     <div class="card-footer bg-white border-0 pb-3">
 
                                         <a
                                             href="/noticias?id=<?= (int) $noticia->id ?>"
                                             class="btn btn-primary btn-sm">
-
                                             Leia Mais
-
                                             <i class="bi bi-arrow-right ms-1"></i>
-
                                         </a>
 
                                     </div>
@@ -595,23 +550,13 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
                     </div>
 
-
-                    <!-- =====================================
-                         PAGINAÇÃO
-                    ===================================== -->
-
                     <?php if ($totalPaginas > 1): ?>
 
-                        <nav
-                            class="mt-4"
-                            aria-label="Paginação de notícias">
+                        <nav class="mt-4" aria-label="Paginação de notícias">
 
                             <ul class="pagination flex-wrap justify-content-center gap-1">
 
-
-                                <!-- ANTERIOR -->
-
-                                <li class="page-item <?= $pagina <= 1 ? 'disabled' : '' ?>">
+                                <li class="page-item <?= $pagina <= 1 ? "disabled" : "" ?>">
 
                                     <?php if ($pagina > 1): ?>
 
@@ -619,9 +564,7 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                             class="page-link"
                                             href="?pagina=<?= $pagina - 1 ?>"
                                             aria-label="Página anterior">
-
                                             &laquo;
-
                                         </a>
 
                                     <?php else: ?>
@@ -629,39 +572,29 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                         <span
                                             class="page-link"
                                             aria-disabled="true">
-
                                             &laquo;
-
                                         </span>
 
                                     <?php endif; ?>
 
                                 </li>
 
-
-                                <!-- NÚMEROS DAS PÁGINAS -->
-
                                 <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
 
-                                    <li class="page-item <?= $i === $pagina ? 'active' : '' ?>">
+                                    <li class="page-item <?= $i === $pagina ? "active" : "" ?>">
 
                                         <a
                                             class="page-link"
                                             href="?pagina=<?= $i ?>"
                                             <?= $i === $pagina ? 'aria-current="page"' : '' ?>>
-
                                             <?= $i ?>
-
                                         </a>
 
                                     </li>
 
                                 <?php endfor; ?>
 
-
-                                <!-- PRÓXIMA -->
-
-                                <li class="page-item <?= $pagina >= $totalPaginas ? 'disabled' : '' ?>">
+                                <li class="page-item <?= $pagina >= $totalPaginas ? "disabled" : "" ?>">
 
                                     <?php if ($pagina < $totalPaginas): ?>
 
@@ -669,9 +602,7 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                             class="page-link"
                                             href="?pagina=<?= $pagina + 1 ?>"
                                             aria-label="Próxima página">
-
                                             &raquo;
-
                                         </a>
 
                                     <?php else: ?>
@@ -679,9 +610,7 @@ $resumirNoticia = static function ($texto, int $limite): string {
                                         <span
                                             class="page-link"
                                             aria-disabled="true">
-
                                             &raquo;
-
                                         </span>
 
                                     <?php endif; ?>
@@ -698,170 +627,239 @@ $resumirNoticia = static function ($texto, int $limite): string {
 
             </div>
 
-
-
-            <!-- =====================================
-                 BARRA LATERAL
-
-                 Agora começa na mesma altura
-                 dos cards das notícias.
-            ===================================== -->
-
             <aside class="col-12 col-lg-3">
-
-
-                <!-- =====================================
-                     AGENDA ESCOLAR
-                ===================================== -->
 
                 <div class="card shadow-sm mb-4 home-sidebar-card">
 
                     <div class="card-header">
 
-                        <i class="bi bi-calendar-event me-2"></i>
+                        <div>
+                            <i class="bi bi-calendar-event me-2"></i>
+                            Evento Escolar
+                        </div>
 
-                        Agenda Escolar
+                        <?php if (count($eventos) > 3): ?>
+
+                            <span class="sidebar-quantidade">
+                                <?= count($eventos) ?>
+                            </span>
+
+                        <?php endif; ?>
 
                     </div>
 
-
                     <?php if (empty($eventos)): ?>
-
-                        <!-- NENHUM EVENTO -->
 
                         <div class="card-body text-center py-4">
 
                             <i class="bi bi-calendar-x fs-2 text-secondary d-block mb-2"></i>
 
                             <p class="text-body-secondary small mb-0">
-
                                 Nenhum evento cadastrado no momento.
-
                             </p>
 
                         </div>
 
                     <?php else: ?>
 
-                        <ul class="list-group list-group-flush">
+                        <div
+                            id="carouselEventos"
+                            class="carousel slide"
+                            data-bs-interval="false"
+                            data-bs-touch="true">
 
-                            <?php foreach ($eventos as $evento): ?>
+                            <div class="carousel-inner">
 
-                                <li class="list-group-item">
+                                <?php foreach ($gruposEventos as $indice => $grupo): ?>
 
-                                    <div class="d-flex align-items-start gap-2">
+                                    <div class="carousel-item <?= $indice === 0 ? "active" : "" ?>">
 
+                                        <ul class="list-group list-group-flush">
 
-                                        <!-- ÍCONE -->
+                                            <?php foreach ($grupo as $evento): ?>
 
-                                        <i class="bi bi-calendar-check icone-sidebar"></i>
+                                                <li class="list-group-item">
 
+                                                    <div class="d-flex align-items-start gap-2">
 
-                                        <!-- INFORMAÇÕES -->
+                                                        <i class="bi bi-calendar-check icone-sidebar"></i>
 
-                                        <div
-                                            class="flex-grow-1"
-                                            style="min-width: 0;">
+                                                        <div
+                                                            class="flex-grow-1"
+                                                            style="min-width: 0;">
 
-                                            <div class="titulo-sidebar mb-1">
+                                                            <div class="titulo-sidebar mb-1">
 
-                                                <?= htmlspecialchars($evento->titulo, ENT_QUOTES, 'UTF-8') ?>
+                                                                <?= htmlspecialchars(
+                                                                    $evento->titulo,
+                                                                    ENT_QUOTES,
+                                                                    "UTF-8"
+                                                                ) ?>
 
-                                            </div>
+                                                            </div>
 
+                                                            <div class="data-sidebar">
 
-                                            <div class="data-sidebar">
+                                                                <i class="bi bi-clock me-1"></i>
 
-                                                <i class="bi bi-clock me-1"></i>
+                                                                <?= $formatarDataHome(
+                                                                    $evento->data_evento
+                                                                ) ?>
 
-                                                <?= $formatarDataHome($evento->data_evento) ?>
+                                                            </div>
 
-                                            </div>
+                                                        </div>
 
-                                        </div>
+                                                    </div>
+
+                                                </li>
+
+                                            <?php endforeach; ?>
+
+                                        </ul>
 
                                     </div>
 
-                                </li>
+                                <?php endforeach; ?>
 
-                            <?php endforeach; ?>
+                            </div>
 
-                        </ul>
+                            <?php if (count($gruposEventos) > 1): ?>
+
+                                <button
+                                    type="button"
+                                    class="sidebar-controle sidebar-controle-anterior"
+                                    data-bs-target="#carouselEventos"
+                                    data-bs-slide="prev"
+                                    aria-label="Eventos anteriores">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="sidebar-controle sidebar-controle-proximo"
+                                    data-bs-target="#carouselEventos"
+                                    data-bs-slide="next"
+                                    aria-label="Próximos eventos">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+
+                            <?php endif; ?>
+
+                        </div>
 
                     <?php endif; ?>
 
                 </div>
 
-
-
-                <!-- =====================================
-                     COMUNICADOS / AVISOS
-                ===================================== -->
-
                 <div class="card shadow-sm home-sidebar-card">
 
                     <div class="card-header">
 
-                        <i class="bi bi-megaphone me-2"></i>
+                        <div>
+                            <i class="bi bi-megaphone me-2"></i>
+                            Avisos
+                        </div>
 
-                        Comunicados
+                        <?php if (count($avisos) > 3): ?>
+
+                            <span class="sidebar-quantidade">
+                                <?= count($avisos) ?>
+                            </span>
+
+                        <?php endif; ?>
 
                     </div>
 
-
                     <?php if (empty($avisos)): ?>
-
-                        <!-- NENHUM AVISO -->
 
                         <div class="card-body text-center py-4">
 
                             <i class="bi bi-bell-slash fs-2 text-secondary d-block mb-2"></i>
 
                             <p class="text-body-secondary small mb-0">
-
-                                Nenhum comunicado disponível no momento.
-
+                                Nenhum aviso disponível no momento.
                             </p>
 
                         </div>
 
                     <?php else: ?>
 
-                        <ul class="list-group list-group-flush">
+                        <div
+                            id="carouselAvisos"
+                            class="carousel slide"
+                            data-bs-interval="false"
+                            data-bs-touch="true">
 
-                            <?php foreach ($avisos as $aviso): ?>
+                            <div class="carousel-inner">
 
-                                <li class="list-group-item">
+                                <?php foreach ($gruposAvisos as $indice => $grupo): ?>
 
-                                    <div class="d-flex align-items-start gap-2">
+                                    <div class="carousel-item <?= $indice === 0 ? "active" : "" ?>">
 
+                                        <ul class="list-group list-group-flush">
 
-                                        <!-- ÍCONE -->
+                                            <?php foreach ($grupo as $aviso): ?>
 
-                                        <i class="bi bi-info-circle-fill icone-sidebar"></i>
+                                                <li class="list-group-item">
 
+                                                    <div class="d-flex align-items-start gap-2">
 
-                                        <!-- CONTEÚDO -->
+                                                        <i class="bi bi-info-circle-fill icone-sidebar"></i>
 
-                                        <div
-                                            class="flex-grow-1"
-                                            style="min-width: 0;">
+                                                        <div
+                                                            class="flex-grow-1"
+                                                            style="min-width: 0;">
 
-                                            <div class="titulo-sidebar">
+                                                            <div class="titulo-sidebar">
 
-                                                <?= htmlspecialchars($aviso->titulo, ENT_QUOTES, 'UTF-8') ?>
+                                                                <?= htmlspecialchars(
+                                                                    $aviso->titulo,
+                                                                    ENT_QUOTES,
+                                                                    "UTF-8"
+                                                                ) ?>
 
-                                            </div>
+                                                            </div>
 
-                                        </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                </li>
+
+                                            <?php endforeach; ?>
+
+                                        </ul>
 
                                     </div>
 
-                                </li>
+                                <?php endforeach; ?>
 
-                            <?php endforeach; ?>
+                            </div>
 
-                        </ul>
+                            <?php if (count($gruposAvisos) > 1): ?>
+
+                                <button
+                                    type="button"
+                                    class="sidebar-controle sidebar-controle-anterior"
+                                    data-bs-target="#carouselAvisos"
+                                    data-bs-slide="prev"
+                                    aria-label="Avisos anteriores">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="sidebar-controle sidebar-controle-proximo"
+                                    data-bs-target="#carouselAvisos"
+                                    data-bs-slide="next"
+                                    aria-label="Próximos avisos">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+
+                            <?php endif; ?>
+
+                        </div>
 
                     <?php endif; ?>
 

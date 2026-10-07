@@ -7,13 +7,11 @@ use model\administrador\Administrador;
 use model\aluno\Aluno;
 use model\credenciais\Credenciais;
 use PDOException;
+use view\View;
+use view\Flash_msg;
 
 abstract class Controller
 {
-
-
-    
-
     public static function attDateTimeLogin(int $id): void
     {
 
@@ -49,7 +47,20 @@ abstract class Controller
         }
     }
 
-    public static function formatarData(string $data , string $format): string{
-         return $obj = new DateTimeImmutable($data)->format($format);
+    public static function formatarData(string $data, string $format): string
+    {
+        return new DateTimeImmutable($data)->format($format);
+    }
+
+    public static function verificarAcesso(object $sessao, int $nivel)
+    {
+
+        if (isset($sessao->acesso) && $sessao->acesso >= $nivel) {
+        } else {
+
+            new Flash_msg(403)->flashMsg();
+            header('location: /');
+            exit;
+        }
     }
 }

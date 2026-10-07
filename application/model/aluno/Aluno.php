@@ -14,6 +14,9 @@ final class Aluno
     public string $data_nascimento;
     public string $id_serie;
     public ?int $id_credenciais = null;
+    public ?int $id_tipo_adm = null;
+
+    public ?int $ativo = null;
 
     public function get(): Aluno|bool
     {
@@ -38,8 +41,13 @@ final class Aluno
         return new AlunoDAO()->insert($this);
     }
 
-    public function idCredConf() : Aluno|bool
+    public function idCredConf(): Aluno|bool
     {
         return new AlunoDAO()->idCredConf($this->id);
+    }
+
+    public function alunoStatus(): array|bool
+    {
+        return new AlunoDAO()->alunoStatus();
     }
 }

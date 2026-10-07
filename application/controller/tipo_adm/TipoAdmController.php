@@ -24,4 +24,15 @@ abstract class TipoAdmController extends Controller
             "acesso" => $consulta->nivel_acesso
         ] : false;
     }
+    public static function aluno_nivel_acesso(int $id): int|false
+    {
+        $obj = new Tipo_adm();
+        $obj->id = $id;
+        $consulta = $obj->get();
+        if (is_object($consulta)) {
+            return $consulta->nivel_acesso;
+        } else {
+            return false;
+        }
+    }
 }

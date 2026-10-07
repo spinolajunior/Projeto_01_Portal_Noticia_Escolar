@@ -51,14 +51,21 @@ abstract class LoginController extends Controller
                         $_SESSION['data_nascimento'] = $usuario->data_nascimento;
                         $_SESSION['serie'] = SerieController::serieById((int)$usuario->id_serie);
                         $_SESSION['id_serie'] = $usuario->id_serie;
+
+                        if ($usuario->id_tipo_adm !== null) {
+                            $nivel_acesso = TipoAdmController::aluno_nivel_acesso($usuario->id_tipo_adm);
+                            if ($nivel_acesso !== false) {
+                                $_SESSION['acesso'] = $nivel_acesso;
+                            }
+                        }
                     } else {
                         $usuario = $usuario["usuario"];
                         $adm_acesso = TipoAdmController::adm_acesso($usuario->id_tipo_adm);
                         $_SESSION['id_tipo_adm'] = $usuario->id_tipo_adm;
-                        $_SESSION['id_tipo_adm'] = $usuario->id_tipo_adm;
                         $_SESSION['cargo'] = $adm_acesso["cargo"];
                         $_SESSION['acesso'] = $adm_acesso["acesso"];
                     }
+
                     $_SESSION['id_usuario'] = $usuario->id;
                     $_SESSION['nome'] =  $usuario->nome;
                     $_SESSION['matricula'] = $usuario->matricula;

@@ -49,7 +49,7 @@ abstract class NoticiaController extends Controller
                     $model->id = $idNoticia;
 
                     if ($model->setImg() !== false) {
-                        header('Location: /noticia?id=' . $idNoticia);
+                        header('Location: /painel/noticia');
                         exit;
                     }
                 }

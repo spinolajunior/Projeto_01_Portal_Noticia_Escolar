@@ -3,7 +3,9 @@
 use controller\HomeController;
 use controller\noticia\NoticiaController;
 use controller\aviso\AvisoController;
+use controller\Controller;
 use controller\evento\EventoController;
+use controller\LogController;
 use controller\UsuarioController;
 use controller\LoginController;
 
@@ -29,18 +31,32 @@ switch ($uri) {
     case "/painel/gerenciamento":
         HomeController::paginaGerenciamento();
         break;
+    case "/painel/logs":
+        LogController::painelLog();
+        break;
 
     case "/cadastro/usuario":
         UsuarioController::cadastroUsuario();
         break;
-    case "/atualizar/usuario":
-        // chamado do controler para atualizar usuario...
+    case "/atualizar/usuario/aluno":
+        UsuarioController::editarAluno();
+        break;
+    case "/atualizar/usuario/administrador":
+        UsuarioController::editarAdm();
+        break;
+    case "/painel/usuarios":
+        UsuarioController::gerenciarUsuario();
         break;
     case "/excluir/usuario":
         break;
+    case "/painel/acesso/usuario":
+        UsuarioController::updateAcessoUsuario();
+        break;
 
 
-   
+    case "/atualizar/myself":
+        UsuarioController::editarPerfil();
+        break;
 
 
     case "/noticias":
@@ -60,7 +76,7 @@ switch ($uri) {
         break;
 
     //View eventos
-   
+
     // case "/eventos":
     //     include VIEW . "evento/Evento.php";
     //     break;

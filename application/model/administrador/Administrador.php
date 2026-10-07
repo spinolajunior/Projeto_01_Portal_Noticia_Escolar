@@ -13,7 +13,7 @@ final class Administrador
     public string $matricula;
     public ?int $id_credenciais = null;
     public ?int $id_tipo_adm = null;
-
+    public ?int $ativo = null;
     public function get(): Administrador|bool
     {
         return new AdministradorDAO()->get($this->id);
@@ -40,5 +40,9 @@ final class Administrador
     public function idCredConf(): Administrador|bool
     {
         return new AdministradorDAO()->idCredConf($this->id);
+    }
+    public function admStatus(): array|bool
+    {
+        return new AdministradorDAO()->admStatus();
     }
 }

@@ -18,6 +18,14 @@ abstract class HomeController extends Controller
         $avisos = AvisoController::getAll();
         $eventos = EventoController::getAll();
         if ($lista !== false) {
+            $lista_retorno = [];
+            foreach ($lista as $elemento) {
+                if ((int)$elemento->status == 1)
+                    $lista_retorno[] = $elemento;
+            }
+
+            $lista = $lista_retorno;
+            
             $paginas = array_chunk($lista, 3);
             if ($indice < 0 || $indice >= count($paginas)) {
                 $indice = 0;

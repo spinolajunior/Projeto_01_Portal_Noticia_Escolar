@@ -20,7 +20,7 @@ class View
         public ?string $base,
         public ?string $main,
         public ?array $model,
-    ) {}
+    ){}
 
 
 
@@ -32,6 +32,11 @@ class View
         ob_start();
 
         $model = $this->model;
+
+        $flash = $_SESSION['flash_msg'] ?? null;
+        if($flash !== null){
+            unset($_SESSION['flash_msg']);
+        }
 
         if (file_exists($this->main)) {
             include $this->main;

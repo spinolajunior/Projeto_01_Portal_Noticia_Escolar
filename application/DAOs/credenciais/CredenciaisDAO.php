@@ -5,7 +5,11 @@ namespace DAOs\credenciais;
 use DAOs\DAO;
 use DateTime;
 use model\credenciais\Credenciais;
+use model\credenciais\CredenciaisCadastroAluno;
+use model\credenciais\CredenciaisCadastroAdministrador;
+
 use \PDO;
+use Throwable;
 
 class CredenciaisDAO extends DAO
 {
@@ -21,32 +25,23 @@ class CredenciaisDAO extends DAO
     }
     public function update(Credenciais $model): Credenciais|bool
     {
-        $consulta = $model->get();
-        if ($consulta->usuario !== $model->usuario or $consulta->senha !== $model->senha) {
-            echo "Passou";
-            var_dump($consulta);
-            $query = "UPDATE credenciais SET
+        try {
+            $consulta = $model->get();
+            if ($consulta->usuario !== $model->usuario or $consulta->senha !== $model->senha) {
+                $query = "UPDATE credenciais SET
                   usuario = ?,
-                  senha = ?,
-                  last_login = ?,
-                  ativo = ?
+                  senha = SHA2(?,256)
                   WHERE id = ?;";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1, $model->usuario);
-            $stmt->bindValue(2, $model->senha);
-            $stmt->bindValue(3, $model->last_login);
-            $stmt->bindValue(4, $model->ativo);
-            $stmt->bindValue(5, $model->id);
-            return ($stmt->execute()) ? $this->get($model->id) : false;
-        } else {
-            $query = "UPDATE credenciais SET
-                  last_login = ?
-                  WHERE id = ?;";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1, $model->last_login);
-            $stmt->bindValue(2, $model->id);
-            return ($stmt->execute()) ? $this->get($model->id) : false;
+                $stmt = $this->pdo->prepare($query);
+                $stmt->bindValue(1, $model->usuario);
+                $stmt->bindValue(2, $model->senha);
+                $stmt->bindValue(3, $model->id);
+                return ($stmt->execute()) ? $this->get($model->id) : false;
+            }
+        } catch (Throwable $e) {
+            return false;
         }
+        return false;
     }
     public function delete(int $id): bool
     {
@@ -111,5 +106,88 @@ class CredenciaisDAO extends DAO
         $stmt->bindValue(1, $time->format("Y-m-d H:i:s"));
         $stmt->bindValue(2, $id);
         return $stmt->execute();
+    }
+    function cadastroAluno(CredenciaisCadastroAluno $obj): bool
+    {
+        try {
+            $this->pdo->beginTransaction();
+            $query = "INSERT INTO credenciais (usuario,senha) VALUES (?,sha2(?,256));";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $obj->usuario);
+            $stmt->bindValue(2, $obj->senha);
+            $stmt->execute();
+
+            $idCredBuffer = $this->pdo->lastInsertId();
+
+            $query = "INSERT INTO aluno (nome,matricula,data_nascimento,id_credenciais,id_serie) 
+           VALUES (?,?,?,?,?);";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $obj->nome);
+            $stmt->bindValue(2, $obj->matricula);
+            $stmt->bindValue(3, $obj->data_nascimento);
+            $stmt->bindValue(4, $idCredBuffer, PDO::PARAM_INT);
+            $stmt->bindValue(5, $obj->id_serie, PDO::PARAM_INT);
+
+
+            $stmt->execute();
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    function cadastroAdm(CredenciaisCadastroAdministrador $obj): bool
+    {
+        try {
+            $this->pdo->beginTransaction();
+            $query = "INSERT INTO credenciais (usuario,senha) VALUES (?,sha2(?,256));";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $obj->usuario);
+            $stmt->bindValue(2, $obj->senha);
+            $stmt->execute();
+
+            $idCredBuffer = $this->pdo->lastInsertId();
+
+            $query = "INSERT INTO administrador (nome,matricula,id_credenciais,id_tipo_adm)
+           VALUES (?,?,?,?);";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $obj->nome);
+            $stmt->bindValue(2, $obj->matricula);
+            $stmt->bindValue(3, $idCredBuffer, PDO::PARAM_INT);
+            $stmt->bindValue(4, $obj->id_tipo_adm, PDO::PARAM_INT);
+
+
+            $stmt->execute();
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            echo ($e->getMessage());
+            return false;
+        }
+    }
+
+    function bloquearAcesso(int $id): bool
+    {
+
+        try {
+            $this->pdo->beginTransaction();
+            $query = "UPDATE credenciais set ativo = ? where id = ?;";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, false, PDO::PARAM_BOOL);
+            $stmt->bindValue(2, $id);
+            $stmt->execute();
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
     }
 }
