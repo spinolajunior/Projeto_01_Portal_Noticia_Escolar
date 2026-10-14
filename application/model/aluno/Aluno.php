@@ -1,0 +1,59 @@
+<?php
+
+namespace model\Aluno;
+
+use DAOs\aluno\AlunoDAO;
+use DAOs\usuario\UsuarioDAO;
+
+final class Aluno
+{
+    public ?int $id = null;
+    public ?string $foto = null;
+    public string $nome;
+
+    public string $matricula;
+    public string $data_nascimento;
+    public string $id_serie;
+    public ?int $id_credenciais = null;
+    public ?int $id_tipo_adm = null;
+
+    public ?int $ativo = null;
+    public ?array $array = null;
+
+    public function get(): Aluno|bool
+    {
+        return new AlunoDAO()->getById($this->id);
+    }
+    public function getAll(): array
+    {
+        return new AlunoDAO()->get();
+    }
+    public function update(): Aluno|bool
+    {
+        return new AlunoDAO()->update($this);
+    }
+
+    public function delete(): Aluno|bool
+    {
+        return new AlunoDAO()->delete($this->id);
+    }
+
+    public function insert(): Aluno|bool
+    {
+        return new AlunoDAO()->insert($this);
+    }
+
+    public function idCredConf(): Aluno|bool
+    {
+        return new AlunoDAO()->idCredConf($this->id);
+    }
+
+    public function alunoStatus(): array|bool
+    {
+        return new AlunoDAO()->alunoStatus();
+    }
+
+    public function atualizarDados(): bool{
+        return new UsuarioDAO()->atualizarAluno($this->array);
+    }
+}
