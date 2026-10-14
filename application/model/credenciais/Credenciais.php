@@ -42,15 +42,19 @@ final class Credenciais
         return new CredenciaisDAO()->logar($this);
     }
 
-    public function setFoto(): bool{
-        return new CredenciaisDAO()->setFoto($this->id);
+    public function adicionarFoto(): bool{
+        return new CredenciaisDAO()->adicionarFoto($this);
     }
 
     public function updateLastLogin(): bool{
         return new CredenciaisDAO()->updateLastLogin($this->id);
     }
 
-    public function bloquearAcesso():bool{
-        return new CredenciaisDAO()->bloquearAcesso($this->id);
+    public function acesso():bool{
+        return new CredenciaisDAO()->acesso($this);
+    }
+
+    public function buscarFotoAutorPubli():string|bool{
+        return new CredenciaisDAO()->buscarFotoAutorPubli($this->id);
     }
 }

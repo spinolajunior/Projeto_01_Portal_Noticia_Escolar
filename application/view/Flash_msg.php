@@ -99,6 +99,9 @@ class Flash_msg
         } elseif ($cod_msg >= 500 && $cod_msg <= 512) {
             $this->flash_msg = $this->_5xx[$cod_msg] . ($msg !== null ? " $msg" : '');
             $this->tipo = "danger";
+        } elseif ($cod_msg === 0) {
+            $this->flash_msg =''.($msg !== null ? " $msg" : '');
+            $this->tipo = "danger";
         } else {
             throw new Exception("$cod_msg invalido!");
         }

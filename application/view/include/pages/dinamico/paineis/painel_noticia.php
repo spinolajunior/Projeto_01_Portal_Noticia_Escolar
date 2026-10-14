@@ -1,33 +1,75 @@
 <?php
-
 $noticias = $model["noticias"] ?? [];
 
 if (!is_iterable($noticias)) {
   $noticias = [];
 }
 
-$quantidadeNoticias = is_countable($noticias)
-  ? count($noticias)
-  : 0;
+$exibirValor = static function ($valor, string $padrao = "-"): string {
+  $valor = trim((string)($valor ?? ""));
+  return htmlspecialchars(
+    $valor !== "" ? $valor : $padrao,
+    ENT_QUOTES | ENT_SUBSTITUTE,
+    "UTF-8"
+  );
+};
 
 $formatarData = static function ($data): string {
-  if (empty($data)) {
-    return "Não definida";
-  }
+  if (empty($data)) return "Não definida";
 
   try {
-    return (new DateTimeImmutable($data))->format("d/m/Y H:i:s");
+    return (new DateTimeImmutable((string)$data))->format("d/m/Y H:i:s");
   } catch (Exception $e) {
     return "Não definida";
   }
 };
 
+$listaNoticias = [];
+
+foreach ($noticias as $noticia) {
+  if (!is_object($noticia) && !is_array($noticia)) continue;
+
+  $noticia = (object)$noticia;
+  $titulo = trim((string)($noticia->titulo ?? ""));
+  $autor = trim((string)($noticia->nome_autor ?? ""));
+  $status = $noticia->status ?? null;
+
+  if ($status === null || (string)$status === "") {
+    $statusTexto = "Indefinido";
+    $statusClasse = "secondary";
+    $statusIcone = "bi-question-circle";
+  } elseif ((int)$status === 1) {
+    $statusTexto = "Ativo";
+    $statusClasse = "success";
+    $statusIcone = "bi-check-circle";
+  } elseif ((int)$status === 0) {
+    $statusTexto = "Inativo";
+    $statusClasse = "danger";
+    $statusIcone = "bi-x-circle";
+  } else {
+    $statusTexto = "Indefinido";
+    $statusClasse = "secondary";
+    $statusIcone = "bi-question-circle";
+  }
+
+  $listaNoticias[] = [
+    "id" => (int)($noticia->id ?? 0),
+    "titulo" => $titulo !== "" ? $titulo : "Título não informado",
+    "autor" => $autor !== "" ? $autor : "Não informado",
+    "data" => $formatarData($noticia->data_pub ?? null),
+    "data_original" => (string)($noticia->data_pub ?? ""),
+    "status" => $statusTexto,
+    "classe" => $statusClasse,
+    "icone" => $statusIcone
+  ];
+}
+
+$quantidadeNoticias = count($listaNoticias);
 ?>
 
-<main class="container-fluid py-3 py-md-4">
-
+<main class="container-fluid py-3 py-md-4 painel-noticias">
   <style>
-    .painel-cabecalho {
+    .painel-noticias .painel-cabecalho {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -35,25 +77,27 @@ $formatarData = static function ($data): string {
       margin-bottom: 1.5rem;
     }
 
-    .painel-cabecalho h1 {
+    .painel-noticias .painel-cabecalho h1 {
       font-size: 1.6rem;
       font-weight: 700;
       margin: 0;
     }
 
-    .painel-acoes {
+    .painel-noticias .painel-acoes {
       display: flex;
+      align-items: center;
       gap: .6rem;
+      flex-shrink: 0;
     }
 
-    .painel-card {
+    .painel-noticias .painel-card {
       border: 0;
       border-radius: .8rem;
       overflow: hidden;
     }
 
-    .painel-card-header {
-      background-color: #0d6efd;
+    .painel-noticias .painel-card-header {
+      background: #0d6efd;
       color: #fff;
       padding: .9rem 1rem;
       display: flex;
@@ -62,26 +106,50 @@ $formatarData = static function ($data): string {
       gap: .75rem;
     }
 
-    .painel-card-header h2 {
+    .painel-noticias .painel-card-header h2 {
       font-size: 1rem;
       font-weight: 600;
       margin: 0;
     }
 
-    .quantidade-registros {
-      background-color: rgba(255, 255, 255, .2);
+    .painel-noticias .quantidade-registros {
+      background: rgba(255, 255, 255, .2);
       padding: .2rem .55rem;
       border-radius: 2rem;
       font-size: .75rem;
       white-space: nowrap;
     }
 
-    .tabela-gerenciamento {
-      margin-bottom: 0;
+    .painel-noticias .barra-busca {
+      padding: .85rem 1rem;
+      background: #fff;
+      border-bottom: 1px solid #edf0f4;
     }
 
-    .tabela-gerenciamento thead th {
-      background-color: #e9f2ff;
+    .painel-noticias .barra-busca .input-group {
+      max-width: 440px;
+    }
+
+    .painel-noticias .barra-busca .form-control,
+    .painel-noticias .barra-busca .input-group-text {
+      border-color: #dce3ed;
+    }
+
+    .painel-noticias .tabela-scroll {
+      max-height: 420px;
+      overflow: auto;
+    }
+
+    .painel-noticias .tabela-gerenciamento {
+      margin-bottom: 0;
+      min-width: 900px;
+    }
+
+    .painel-noticias .tabela-gerenciamento thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #e9f2ff;
       color: #212529;
       font-weight: 600;
       border-bottom: 2px solid #0d6efd;
@@ -90,140 +158,258 @@ $formatarData = static function ($data): string {
       height: 48px;
     }
 
-    .tabela-gerenciamento th:not(:last-child),
-    .tabela-gerenciamento td:not(:last-child) {
+    .painel-noticias .tabela-gerenciamento th:not(:last-child),
+    .painel-noticias .tabela-gerenciamento td:not(:last-child) {
       border-right: 1px solid #d9e2ef;
     }
 
-    .tabela-gerenciamento thead th:not(:last-child) {
-      border-right: 1px solid #c7d7ee;
+    .painel-noticias .tabela-gerenciamento thead th:not(:last-child) {
+      border-right-color: #c7d7ee;
     }
 
-    .tabela-gerenciamento tbody tr {
+    .painel-noticias .tabela-gerenciamento tbody tr {
       height: 58px;
-      transition: background-color .18s ease;
     }
 
-    .tabela-gerenciamento tbody td {
-      background-color: #fff;
+    .painel-noticias .tabela-gerenciamento tbody td {
+      background: #fff;
       vertical-align: middle;
     }
 
-    .tabela-gerenciamento tbody tr:hover td {
-      background-color: #f8fbff;
+    .painel-noticias .tabela-gerenciamento tbody tr:hover td {
+      background: #f8fbff;
     }
 
-    .titulo-noticia-desktop {
+    .painel-noticias .titulo-noticia-desktop {
       font-weight: 600;
       overflow-wrap: anywhere;
     }
 
-    .status-noticia {
+    .painel-noticias .status-noticia {
+      display: inline-block;
+      min-width: 85px;
+      padding: .4rem .6rem;
       font-size: .75rem;
       font-weight: 600;
-      min-width: 85px;
-      display: inline-block;
     }
 
-    .acoes-tabela {
+    .painel-noticias .acoes-tabela {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       gap: .45rem;
       white-space: nowrap;
     }
 
-    .acao-tabela {
+    .painel-noticias .acao-tabela {
       border-radius: .4rem;
-      transition: transform .18s ease;
+      transition: transform .18s;
     }
 
-    .acao-tabela:hover {
+    .painel-noticias .acao-tabela:hover {
       transform: translateY(-1px);
     }
 
-    .card-noticia-mobile {
-      border: 1px solid #dee2e6;
-      border-radius: .8rem;
-      overflow: hidden;
-      background-color: #fff;
+    .painel-noticias .cards-mobile {
+      display: none;
+      background: #f8fafc;
     }
 
-    .card-noticia-mobile .card-header {
-      background-color: #0d6efd;
-      color: #fff;
-      border: 0;
-      padding: .9rem 1rem;
+    .painel-noticias .cards-mobile-lista {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .75rem;
+      padding: .85rem;
     }
 
-    .card-noticia-mobile .titulo-noticia {
-      font-size: 1rem;
+    .painel-noticias .card-noticia-mobile {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: .75rem;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+    }
+
+    .painel-noticias .noticia-mobile-topo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .65rem;
+      margin-bottom: .8rem;
+    }
+
+    .painel-noticias .noticia-mobile-identificacao {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .8rem;
       font-weight: 600;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
+      color: #64748b;
     }
 
-    .card-noticia-mobile .info-label {
-      color: #6c757d;
-      font-size: .78rem;
-      margin-bottom: .15rem;
-    }
-
-    .card-noticia-mobile .info-valor {
-      font-size: .9rem;
-      overflow-wrap: anywhere;
-    }
-
-    .card-noticia-mobile .icone-info {
-      width: 22px;
-      flex-shrink: 0;
+    .painel-noticias .noticia-mobile-icone {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eaf2ff;
       color: #0d6efd;
+      border-radius: 8px;
     }
 
-    .acoes-mobile {
+    .painel-noticias .titulo-noticia-mobile {
+      font-size: .96rem;
+      line-height: 1.5;
+      font-weight: 700;
+      color: #263345;
+      overflow-wrap: anywhere;
+      margin-bottom: .85rem;
+    }
+
+    .painel-noticias .noticia-mobile-info {
+      display: grid;
+      gap: .5rem;
+      margin-bottom: .9rem;
+    }
+
+    .painel-noticias .noticia-mobile-linha {
+      display: flex;
+      align-items: flex-start;
+      gap: .55rem;
+      min-width: 0;
+      font-size: .83rem;
+      color: #64748b;
+    }
+
+    .painel-noticias .noticia-mobile-linha i {
+      color: #0d6efd;
+      flex-shrink: 0;
+    }
+
+    .painel-noticias .noticia-mobile-valor {
+      color: #334155;
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+
+    .painel-noticias .acoes-mobile {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: .5rem;
+      gap: .55rem;
+      border-top: 1px solid #edf0f4;
+      padding-top: .85rem;
+      margin-top: auto;
     }
 
-    .acoes-mobile .btn {
+    .painel-noticias .acoes-mobile .btn {
       width: 100%;
+      min-height: 39px;
+      border-radius: 7px;
+      font-size: .85rem;
+      font-weight: 600;
     }
 
-    .estado-vazio {
-      padding: 3rem 1rem;
+    .painel-noticias .mobile-lista-rodape {
+      padding: .4rem .85rem 1rem;
       text-align: center;
+    }
+
+    .painel-noticias .mobile-lista-contador {
+      font-size: .78rem;
+      color: #6c757d;
+      margin-bottom: .65rem;
+    }
+
+    .painel-noticias .mobile-mostrar-mais {
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .55rem 1.25rem;
+    }
+
+    .painel-noticias .estado-vazio {
+      text-align: center;
+      padding: 3rem 1rem;
       color: #6c757d;
     }
 
-    .estado-vazio i {
+    .painel-noticias .estado-vazio i {
       display: block;
       font-size: 2.5rem;
       margin-bottom: .75rem;
     }
 
-    @media (max-width: 767.98px) {
-      .painel-cabecalho {
+    .painel-noticias .sem-resultados {
+      padding: 2.5rem 1rem;
+      text-align: center;
+      color: #6c757d;
+    }
+
+    .painel-noticias [hidden] {
+      display: none !important;
+    }
+
+    .painel-noticias .tabela-scroll::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .painel-noticias .tabela-scroll::-webkit-scrollbar-thumb {
+      background: #adb5bd;
+      border-radius: 10px;
+    }
+
+    .painel-noticias .tabela-scroll::-webkit-scrollbar-track {
+      background: #f1f3f5;
+    }
+
+    @media(min-width:700px) and (max-width:991.98px) {
+      .painel-noticias .cards-mobile-lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media(max-width:991.98px) {
+      .painel-noticias .tabela-desktop {
+        display: none;
+      }
+
+      .painel-noticias .cards-mobile {
+        display: block;
+      }
+    }
+
+    @media(max-width:767.98px) {
+      .painel-noticias .painel-cabecalho {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .painel-cabecalho h1 {
+      .painel-noticias .painel-cabecalho h1 {
         font-size: 1.35rem;
       }
 
-      .painel-acoes {
+      .painel-noticias .painel-acoes {
         display: grid;
         grid-template-columns: 1fr 1fr;
       }
 
-      .painel-acoes .btn {
+      .painel-noticias .painel-acoes .btn {
         width: 100%;
+      }
+
+      .painel-noticias .barra-busca .input-group {
+        max-width: none;
       }
     }
 
-    @media (max-width: 575.98px) {
-      .painel-acoes {
+    @media(max-width:575.98px) {
+      .painel-noticias .painel-acoes {
         grid-template-columns: 1fr;
       }
     }
@@ -233,43 +419,32 @@ $formatarData = static function ($data): string {
     <div class="col-12 col-xxl-10">
 
       <div class="painel-cabecalho">
-
         <div>
           <h1>
             <i class="bi bi-newspaper text-primary me-2"></i>
             Notícias
           </h1>
-
           <div class="text-body-secondary mt-1">
             Gerencie as notícias publicadas no portal.
           </div>
         </div>
 
         <div class="painel-acoes">
-
-          <a
-            href="/painel/gerenciamento"
-            class="btn btn-outline-secondary"
-            onclick="return voltarPainel(event);">
+          <a href="/painel/gerenciamento" class="btn btn-outline-secondary px-4">
             <i class="bi bi-arrow-left me-1"></i>
             Voltar
           </a>
 
-          <a
-            href="/cadastro/noticia"
-            class="btn btn-primary">
+          <a href="/cadastro/noticia" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i>
             Nova Notícia
           </a>
-
         </div>
-
       </div>
 
-      <div class="card shadow-sm painel-card">
+      <section class="card shadow-sm painel-card" data-painel-noticias>
 
         <div class="painel-card-header">
-
           <h2>
             <i class="bi bi-newspaper me-2"></i>
             Notícias cadastradas
@@ -279,342 +454,351 @@ $formatarData = static function ($data): string {
             <?= $quantidadeNoticias ?>
             <?= $quantidadeNoticias === 1 ? "registro" : "registros" ?>
           </span>
-
         </div>
 
         <?php if ($quantidadeNoticias === 0): ?>
 
           <div class="estado-vazio">
-
-            <i class="bi bi-newspaper"></i>
-
-            <strong>
-              Nenhuma notícia cadastrada
-            </strong>
-
+            <i class="bi bi-journal-x"></i>
+            <strong>Nenhuma notícia cadastrada</strong>
             <div class="small mt-1">
               Cadastre uma notícia para começar a gerenciar as publicações.
             </div>
-
           </div>
 
         <?php else: ?>
 
-          <div class="d-none d-lg-block">
+          <div class="barra-busca">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-white">
+                <i class="bi bi-search text-secondary"></i>
+              </span>
 
-            <div class="table-responsive">
-
-              <table class="table table-hover tabela-gerenciamento">
-
-                <thead>
-                  <tr>
-                    <th class="ps-3 ps-md-4">
-                      ID
-                    </th>
-
-                    <th>
-                      Título
-                    </th>
-
-                    <th>
-                      Publicado por
-                    </th>
-
-                    <th>
-                      Data da publicação
-                    </th>
-
-                    <th class="text-center">
-                      Status
-                    </th>
-
-                    <th class="text-center pe-3 pe-md-4">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  <?php foreach ($noticias as $noticia): ?>
-
-                    <?php
-                    $dataFormatada = $formatarData(
-                      $noticia->data_pub
-                    );
-                    ?>
-
-                    <tr>
-
-                      <td class="ps-3 ps-md-4">
-                        <?= (int) $noticia->id ?>
-                      </td>
-
-                      <td style="min-width: 180px;">
-
-                        <div class="titulo-noticia-desktop">
-
-                          <?= htmlspecialchars(
-                            $noticia->titulo,
-                            ENT_QUOTES,
-                            "UTF-8"
-                          ) ?>
-
-                        </div>
-
-                      </td>
-
-                      <td>
-
-                        <i class="bi bi-person text-primary me-1"></i>
-
-                        <?= htmlspecialchars(
-                          $noticia->nome_autor
-                            ?? "Não informado",
-                          ENT_QUOTES,
-                          "UTF-8"
-                        ) ?>
-
-                      </td>
-
-                      <td class="text-nowrap">
-
-                        <i class="bi bi-calendar3 text-primary me-1"></i>
-
-                        <?= $dataFormatada ?>
-
-                      </td>
-
-                      <td class="text-center">
-
-                        <?php if ($noticia->status === null): ?>
-
-                          <span class="badge text-bg-secondary status-noticia">
-                            Indefinido
-                          </span>
-
-                        <?php elseif ((int) $noticia->status === 1): ?>
-
-                          <span class="badge text-bg-success status-noticia">
-
-                            <i class="bi bi-check-circle me-1"></i>
-                            Ativo
-
-                          </span>
-
-                        <?php else: ?>
-
-                          <span class="badge text-bg-danger status-noticia">
-
-                            <i class="bi bi-x-circle me-1"></i>
-                            Inativo
-
-                          </span>
-
-                        <?php endif; ?>
-
-                      </td>
-
-                      <td class="pe-3 pe-md-4">
-
-                        <div class="acoes-tabela">
-
-                          <a
-                            href="/atualizar/noticia?id=<?= (int) $noticia->id ?>"
-                            class="btn btn-warning btn-sm acao-tabela">
-                            <i class="bi bi-pencil-square me-1"></i>
-                            Editar
-                          </a>
-
-                          <a
-                            href="/excluir/noticia?id=<?= (int) $noticia->id ?>"
-                            class="btn btn-danger btn-sm acao-tabela"
-                            onclick="return confirm('Deseja realmente excluir esta notícia?');">
-                            <i class="bi bi-trash-fill me-1"></i>
-                            Excluir
-                          </a>
-
-                        </div>
-
-                      </td>
-
-                    </tr>
-
-                  <?php endforeach; ?>
-
-                </tbody>
-
-              </table>
-
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Pesquisar por ID, título, autor ou status..."
+                aria-label="Pesquisar notícias"
+                autocomplete="off"
+                data-busca-noticias>
             </div>
-
           </div>
 
-          <div class="d-lg-none p-3">
+          <div class="tabela-scroll tabela-desktop">
+            <table class="table table-hover tabela-gerenciamento">
+              <thead>
+                <tr>
+                  <th class="ps-3 ps-md-4">ID</th>
+                  <th>Título</th>
+                  <th>Publicado por</th>
+                  <th>Data da publicação</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center pe-3 pe-md-4">Ações</th>
+                </tr>
+              </thead>
 
-            <div class="row g-3">
+              <tbody>
+                <?php foreach ($listaNoticias as $noticia): ?>
+                  <?php
+                  $busca = implode(" ", [
+                    $noticia["id"],
+                    $noticia["titulo"],
+                    $noticia["autor"],
+                    $noticia["data"],
+                    $noticia["data_original"],
+                    $noticia["status"]
+                  ]);
+                  ?>
 
-              <?php foreach ($noticias as $noticia): ?>
+                  <tr
+                    data-linha-noticia
+                    data-busca="<?= $exibirValor($busca) ?>">
 
+                    <td class="ps-3 ps-md-4">
+                      <?= $noticia["id"] ?>
+                    </td>
+
+                    <td style="min-width:180px">
+                      <div class="titulo-noticia-desktop">
+                        <i class="bi bi-newspaper text-primary me-1"></i>
+                        <?= $exibirValor($noticia["titulo"]) ?>
+                      </div>
+                    </td>
+
+                    <td>
+                      <i class="bi bi-person-circle text-primary me-1"></i>
+                      <?= $exibirValor($noticia["autor"]) ?>
+                    </td>
+
+                    <td class="text-nowrap">
+                      <i class="bi bi-calendar3 text-primary me-1"></i>
+                      <?= $exibirValor($noticia["data"]) ?>
+                    </td>
+
+                    <td class="text-center">
+                      <span class="badge text-bg-<?= $noticia["classe"] ?> status-noticia">
+                        <i class="bi <?= $noticia["icone"] ?> me-1"></i>
+                        <?= $noticia["status"] ?>
+                      </span>
+                    </td>
+
+                    <td class="pe-3 pe-md-4">
+                      <div class="acoes-tabela">
+                        <a
+                          href="/atualizar/noticia?id=<?= $noticia["id"] ?>"
+                          class="btn btn-warning btn-sm acao-tabela"
+                          title="Editar notícia">
+                          <i class="bi bi-pencil-square me-1"></i>
+                          Editar
+                        </a>
+
+                        <a
+                          href="/excluir/noticia?id=<?= $noticia["id"] ?>"
+                          class="btn btn-danger btn-sm acao-tabela"
+                          title="Excluir notícia"
+                          data-confirmar-exclusao
+                          data-titulo="<?= $exibirValor($noticia["titulo"]) ?>">
+                          <i class="bi bi-trash-fill me-1"></i>
+                          Excluir
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="cards-mobile">
+            <div class="cards-mobile-lista">
+
+              <?php foreach ($listaNoticias as $noticia): ?>
                 <?php
-                $dataFormatada = $formatarData(
-                  $noticia->data_pub
-                );
+                $busca = implode(" ", [
+                  $noticia["id"],
+                  $noticia["titulo"],
+                  $noticia["autor"],
+                  $noticia["data"],
+                  $noticia["data_original"],
+                  $noticia["status"]
+                ]);
                 ?>
 
-                <div class="col-12 col-md-6">
+                <article
+                  class="card-noticia-mobile"
+                  data-card-noticia
+                  data-busca="<?= $exibirValor($busca) ?>">
 
-                  <article class="card card-noticia-mobile h-100 shadow-sm">
-
-                    <div class="card-header">
-
-                      <div class="d-flex justify-content-between align-items-center gap-2">
-
-                        <span class="fw-semibold">
-
-                          <i class="bi bi-newspaper me-1"></i>
-
-                          Notícia #<?= (int) $noticia->id ?>
-
-                        </span>
-
-                        <?php if ($noticia->status === null): ?>
-
-                          <span class="badge text-bg-secondary status-noticia">
-                            Indefinido
-                          </span>
-
-                        <?php elseif ((int) $noticia->status === 1): ?>
-
-                          <span class="badge text-bg-success status-noticia">
-
-                            <i class="bi bi-check-circle me-1"></i>
-                            Ativo
-
-                          </span>
-
-                        <?php else: ?>
-
-                          <span class="badge text-bg-danger status-noticia">
-
-                            <i class="bi bi-x-circle me-1"></i>
-                            Inativo
-
-                          </span>
-
-                        <?php endif; ?>
-
+                  <div class="noticia-mobile-topo">
+                    <div class="noticia-mobile-identificacao">
+                      <div class="noticia-mobile-icone">
+                        <i class="bi bi-newspaper"></i>
                       </div>
 
+                      Notícia #<?= $noticia["id"] ?>
                     </div>
 
-                    <div class="card-body d-flex flex-column">
+                    <span class="badge text-bg-<?= $noticia["classe"] ?> status-noticia">
+                      <?= $noticia["status"] ?>
+                    </span>
+                  </div>
 
-                      <h2 class="titulo-noticia h6 mb-3">
+                  <h3 class="titulo-noticia-mobile">
+                    <?= $exibirValor($noticia["titulo"]) ?>
+                  </h3>
 
-                        <?= htmlspecialchars(
-                          $noticia->titulo,
-                          ENT_QUOTES,
-                          "UTF-8"
-                        ) ?>
-
-                      </h2>
-
-                      <div class="d-flex align-items-start gap-2 mb-3">
-
-                        <i class="bi bi-person-circle icone-info fs-5"></i>
-
-                        <div class="flex-grow-1" style="min-width: 0;">
-
-                          <div class="info-label">
-                            Publicado por
-                          </div>
-
-                          <div class="info-valor fw-medium">
-
-                            <?= htmlspecialchars(
-                              $noticia->nome_autor
-                                ?? "Não informado",
-                              ENT_QUOTES,
-                              "UTF-8"
-                            ) ?>
-
-                          </div>
-
-                        </div>
-
+                  <div class="noticia-mobile-info">
+                    <div class="noticia-mobile-linha">
+                      <i class="bi bi-person-circle"></i>
+                      <div class="noticia-mobile-valor">
+                        <span class="text-secondary">Por:</span>
+                        <?= $exibirValor($noticia["autor"]) ?>
                       </div>
-
-                      <div class="d-flex align-items-start gap-2">
-
-                        <i class="bi bi-calendar3 icone-info fs-5"></i>
-
-                        <div class="flex-grow-1">
-
-                          <div class="info-label">
-                            Data da publicação
-                          </div>
-
-                          <div class="info-valor">
-                            <?= $dataFormatada ?>
-                          </div>
-
-                        </div>
-
-                      </div>
-
-                      <div class="mt-auto pt-3 border-top">
-
-                        <div class="acoes-mobile">
-
-                          <a
-                            href="/atualizar/noticia?id=<?= (int) $noticia->id ?>"
-                            class="btn btn-warning">
-                            <i class="bi bi-pencil-square me-1"></i>
-                            Editar
-                          </a>
-
-                          <a
-                            href="/excluir/noticia?id=<?= (int) $noticia->id ?>"
-                            class="btn btn-danger"
-                            onclick="return confirm('Deseja realmente excluir esta notícia?');">
-                            <i class="bi bi-trash-fill me-1"></i>
-                            Excluir
-                          </a>
-
-                        </div>
-
-                      </div>
-
                     </div>
 
-                  </article>
+                    <div class="noticia-mobile-linha">
+                      <i class="bi bi-calendar3"></i>
+                      <div class="noticia-mobile-valor">
+                        <?= $exibirValor($noticia["data"]) ?>
+                      </div>
+                    </div>
+                  </div>
 
-                </div>
+                  <div class="acoes-mobile">
+                    <a
+                      href="/atualizar/noticia?id=<?= $noticia["id"] ?>"
+                      class="btn btn-warning">
+                      <i class="bi bi-pencil-square me-1"></i>
+                      Editar
+                    </a>
+
+                    <a
+                      href="/excluir/noticia?id=<?= $noticia["id"] ?>"
+                      class="btn btn-danger"
+                      data-confirmar-exclusao
+                      data-titulo="<?= $exibirValor($noticia["titulo"]) ?>">
+                      <i class="bi bi-trash-fill me-1"></i>
+                      Excluir
+                    </a>
+                  </div>
+                </article>
 
               <?php endforeach; ?>
 
             </div>
 
+            <div class="mobile-lista-rodape" data-rodape-mobile>
+              <div
+                class="mobile-lista-contador"
+                data-contador-mobile
+                aria-live="polite"></div>
+
+              <button
+                type="button"
+                class="btn btn-outline-primary mobile-mostrar-mais"
+                data-mostrar-mais
+                hidden>
+                <i class="bi bi-chevron-down me-1"></i>
+                <span data-texto-mais>Mostrar mais 5</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sem-resultados" data-sem-resultados hidden>
+            <i class="bi bi-search fs-2 d-block mb-2"></i>
+            Nenhuma notícia corresponde à pesquisa.
           </div>
 
         <?php endif; ?>
 
-      </div>
-
+      </section>
     </div>
   </div>
-
 </main>
 
 <script>
-  function voltarPainel(event) {
-    if (window.history.length > 1) {
-      event.preventDefault();
-      window.history.back();
-      return false;
+  document.addEventListener("DOMContentLoaded", () => {
+    const painel = document.querySelector(".painel-noticias [data-painel-noticias]");
+    if (!painel) return;
+
+    const normalizar = texto => String(texto || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+    const busca = painel.querySelector("[data-busca-noticias]");
+    const linhas = [...painel.querySelectorAll("[data-linha-noticia]")];
+    const cards = [...painel.querySelectorAll("[data-card-noticia]")];
+    const botaoMais = painel.querySelector("[data-mostrar-mais]");
+    const textoMais = painel.querySelector("[data-texto-mais]");
+    const contador = painel.querySelector("[data-contador-mobile]");
+    const rodape = painel.querySelector("[data-rodape-mobile]");
+    const semResultados = painel.querySelector("[data-sem-resultados]");
+
+    let limiteMobile = 5;
+
+    function atualizarLista() {
+      if (!busca) return;
+
+      const termo = normalizar(busca.value);
+      let encontrados = 0;
+      let exibidos = 0;
+
+      linhas.forEach(linha => {
+        const corresponde = normalizar(linha.dataset.busca).includes(termo);
+        linha.hidden = !corresponde;
+      });
+
+      cards.forEach(card => {
+        const corresponde = normalizar(card.dataset.busca).includes(termo);
+
+        if (!corresponde) {
+          card.hidden = true;
+          return;
+        }
+
+        encontrados++;
+
+        if (exibidos < limiteMobile) {
+          card.hidden = false;
+          exibidos++;
+        } else {
+          card.hidden = true;
+        }
+      });
+
+      if (semResultados) {
+        semResultados.hidden = encontrados !== 0;
+      }
+
+      if (rodape) {
+        rodape.hidden = encontrados === 0;
+      }
+
+      if (contador) {
+        contador.textContent =
+          "Exibindo " + exibidos + " de " + encontrados + " notícias";
+      }
+
+      if (botaoMais) {
+        const restantes = Math.max(0, encontrados - limiteMobile);
+
+        botaoMais.hidden = restantes === 0;
+
+        if (textoMais) {
+          textoMais.textContent =
+            "Mostrar mais " + Math.min(5, restantes);
+        }
+      }
     }
 
-    return true;
-  }
+    if (busca) {
+      busca.addEventListener("input", () => {
+        limiteMobile = 5;
+        atualizarLista();
+      });
+    }
+
+    if (botaoMais) {
+      botaoMais.addEventListener("click", () => {
+        limiteMobile += 5;
+        atualizarLista();
+      });
+    }
+
+    painel.querySelectorAll("[data-confirmar-exclusao]").forEach(link => {
+      link.addEventListener("click", event => {
+        if (link.dataset.enviando === "1") {
+          event.preventDefault();
+          return;
+        }
+
+        const titulo = link.dataset.titulo || "esta notícia";
+
+        const confirmar = confirm(
+          'Deseja realmente excluir a notícia "' +
+          titulo +
+          '"?\n\nEssa ação não poderá ser desfeita.'
+        );
+
+        if (!confirmar) {
+          event.preventDefault();
+          return;
+        }
+
+        link.dataset.enviando = "1";
+      });
+    });
+
+    window.addEventListener("pageshow", event => {
+      if (!event.persisted) return;
+
+      painel.querySelectorAll("[data-confirmar-exclusao]").forEach(link => {
+        delete link.dataset.enviando;
+      });
+    });
+
+    atualizarLista();
+  });
 </script>

@@ -434,6 +434,7 @@
 
             </div>
 
+            <?php if((int)$_SESSION['acesso'] === 4): ?>
             <div class="col-12 col-sm-6 col-xl-4">
 
                 <a
@@ -468,6 +469,7 @@
                 </a>
 
             </div>
+            <?php endif; ?>
 
         </section>
 

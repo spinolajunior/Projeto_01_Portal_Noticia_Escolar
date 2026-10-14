@@ -69,8 +69,9 @@ class CredenciaisDAO extends DAO
 
         return $stmt->fetchAll(PDO::FETCH_CLASS, Credenciais::class);
     }
-    function logar(Credenciais $credencial): bool|Credenciais
+    public function logar(Credenciais $credencial): bool|Credenciais
     {
+        try{
         $query = "SELECT * FROM credenciais WHERE usuario = ? AND Senha = sha2(?,256)  ";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $credencial->usuario);
@@ -85,16 +86,25 @@ class CredenciaisDAO extends DAO
         } else {
             return false;
         }
+
+        }catch (Throwable $e){
+            return false;
+        }
     }
 
-    function setFoto(int $id): bool
+    public function adicionarFoto(Credenciais $obj): bool
     {
-        $query = "UPDATE credenciais SET
-        foto = ? WHERE id = ?;";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, (string)$id, PDO::PARAM_STR);
-        $stmt->bindValue(1, $id);
-        return $stmt->execute();
+        try {
+            $query = "UPDATE credenciais SET  foto = ? where id = ?;";
+            
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1,$obj->foto,PDO::PARAM_STR);
+            $stmt->bindValue(2,$obj->id,PDO::PARAM_INT);
+            return $stmt->execute();
+
+            } catch (Throwable $e) {
+                return false;
+        }
     }
 
     function updateLastLogin(int $id): bool
@@ -173,20 +183,34 @@ class CredenciaisDAO extends DAO
         }
     }
 
-    function bloquearAcesso(int $id): bool
+    function acesso(Credenciais $obj): bool
     {
+        $id = $obj->id;
+        $ativo = $obj->ativo;
 
         try {
             $this->pdo->beginTransaction();
             $query = "UPDATE credenciais set ativo = ? where id = ?;";
             $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1, false, PDO::PARAM_BOOL);
+            $stmt->bindValue(1, $ativo, PDO::PARAM_BOOL);
             $stmt->bindValue(2, $id);
             $stmt->execute();
             $this->pdo->commit();
             return true;
         } catch (Throwable $e) {
             $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    function buscarFotoAutorPubli(int $id) : string|bool{
+        try{
+            $query = "SELECT foto from credenciais where id = ?;";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1,$id,PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn();
+        }catch (Throwable $e){
             return false;
         }
     }

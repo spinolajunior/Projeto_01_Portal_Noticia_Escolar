@@ -1,300 +1,246 @@
 <?php
+$usuario = (object)($model['session'] ?? []);
+$esc = static fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-use controller\Controller;
+$fotoPadrao = '/view/img/upload/perfil_usuario/user_def.jpg';
+$foto = $fotoPadrao;
+$fotoBanco = trim((string)($usuario->foto ?? ''));
+$nomeArquivo = basename(str_replace('\\', '/', $fotoBanco));
 
-$usuario = $model['usuario'];
-$foto = ($usuario->foto !== null) ? $usuario->foto : "/view/img/upload/perfil_usuario/user_def.jpg";
+if ($nomeArquivo !== '' && !in_array($nomeArquivo, ['.', '..'], true)) {
+    $diretorio = '/view/img/upload/perfil_usuario/';
+    $raizes = array_unique(array_filter([
+        $_SERVER['DOCUMENT_ROOT'] ?? '',
+        defined('BASE_DIR') ? BASE_DIR : ''
+    ]));
 
+    foreach ($raizes as $raiz) {
+        $caminhoFisico = rtrim($raiz, '/\\') . $diretorio . $nomeArquivo;
+
+        if (is_file($caminhoFisico) && is_readable($caminhoFisico)) {
+            $foto = $diretorio . rawurlencode($nomeArquivo);
+            break;
+        }
+    }
+}
+
+$formatarData = static function ($valor): string {
+    if (empty($valor)) return 'Não informada';
+
+    try {
+        return (new DateTimeImmutable((string)$valor))->format('d/m/Y');
+    } catch (Exception $e) {
+        return 'Não informada';
+    }
+};
+
+$nome = trim((string)($usuario->nome ?? ''));
+$nome = $nome !== '' ? $nome : 'Nome não informado';
+
+$matricula = trim((string)($usuario->matricula ?? ''));
+$serie = trim((string)($usuario->serie ?? ''));
+$nivelAcesso = (int)($usuario->acesso ?? 0);
+$nivelSessao = (int)($_SESSION['nivel'] ?? $nivelAcesso);
+$ativo = (int)($usuario->ativo ?? 0) === 1;
 ?>
 <main class="container py-4 py-md-5">
-
     <style>
-        /* CARD PRINCIPAL */
-
         .perfil-aluno {
             border-radius: 1rem;
-            overflow: hidden;
+            overflow: hidden
         }
 
-        /* CABEÇALHO */
-
         .perfil-aluno .cabecalho-perfil {
-            background: linear-gradient(135deg,
-                    #0d6efd,
-                    #0a58ca);
-
-            color: #fff;
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: #fff
         }
 
         .perfil-aluno .foto-perfil {
-            width: 9rem;
-            height: 9rem;
+            width: 145px;
+            height: 145px;
             object-fit: cover;
-
-            background-color: #fff;
+            background: #fff;
             border: 4px solid rgba(255, 255, 255, .9);
+            border-radius: 50%
         }
 
-        /* SEÇÕES */
+        .perfil-aluno .nome-perfil {
+            font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+            overflow-wrap: anywhere
+        }
 
         .perfil-aluno .secao-perfil {
             color: #0d6efd;
-            font-weight: 700;
+            font-weight: 700
         }
 
-        /* CAMPOS */
-
         .perfil-aluno .campo-perfil {
-            background-color: #fff;
+            background: #fff;
             border: 1px solid #e3eaf4;
             border-radius: .75rem;
             height: 100%;
             padding: 1rem;
-
-            transition: border-color .2s ease;
+            transition: border-color .2s
         }
 
         .perfil-aluno .campo-perfil:hover {
-            border-color: #b6d4fe;
+            border-color: #b6d4fe
         }
 
         .perfil-aluno .campo-label {
             display: block;
             color: #6c757d;
             font-size: .8rem;
-            margin-bottom: .35rem;
+            margin-bottom: .35rem
         }
 
         .perfil-aluno .campo-valor {
             display: block;
             font-size: .95rem;
             font-weight: 600;
-            overflow-wrap: anywhere;
+            color: #273444;
+            overflow-wrap: anywhere
         }
 
-        /* RESPONSIVIDADE */
+        .perfil-aluno .campo-valor.vazio {
+            font-weight: 400;
+            color: #6c757d;
+            font-style: italic
+        }
 
-        @media (max-width: 575.98px) {
+        .perfil-aluno .separador-perfil {
+            border-color: #e9edf2;
+            opacity: 1
+        }
 
+        .perfil-aluno .botao-editar {
+            min-width: 190px;
+            border-radius: 8px
+        }
+
+        @media(max-width:575.98px) {
             .perfil-aluno .foto-perfil {
-                width: 7rem;
-                height: 7rem;
+                width: 115px;
+                height: 115px
             }
 
-            .perfil-aluno .cabecalho-perfil h1 {
-                font-size: 1.35rem;
+            .perfil-aluno .campo-perfil {
+                padding: .9rem
             }
 
             .perfil-aluno .botao-editar {
-                width: 100%;
+                width: 100%
             }
-
         }
     </style>
-
-
     <div class="row justify-content-center">
-
         <div class="col-12 col-lg-10 col-xl-9">
-
             <section class="card perfil-aluno border-0 shadow-sm">
-
-
-                <!-- =====================================
-                     CABEÇALHO DO PERFIL
-                ===================================== -->
-
                 <header class="cabecalho-perfil px-3 px-md-5 py-4 py-md-5 text-center">
-
-
-                    <!-- FOTO PADRÃO -->
-
                     <img
-                        src="<?= $foto ?>"
-                        alt="Foto de perfil padrão"
-                        class="foto-perfil rounded-circle shadow-sm mb-3">
+                        src="<?= $esc($foto) ?>"
+                        alt="Foto de perfil de <?= $esc($nome) ?>"
+                        class="foto-perfil shadow-sm mb-3"
+                        onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
 
-
-                    <!-- NOME -->
-
-                    <h1 class="h3 fw-bold mb-2">
-                        <?= $usuario->nome ?>
-                    </h1>
-
-
-                    <!-- IDENTIFICAÇÃO -->
+                    <h1 class="nome-perfil fw-bold mb-2"><?= $esc($nome) ?></h1>
 
                     <p class="mb-3 opacity-75">
-
-                        <i class="bi bi-mortarboard-fill me-1"></i>
-
-                        Aluno
-
+                        <i class="bi bi-mortarboard-fill me-1"></i>Aluno
                     </p>
 
-
-                    <!-- STATUS -->
-
-
-                    <?php if ($usuario->ativo == true): ?>
-
+                    <?php if ($ativo): ?>
                         <span class="badge rounded-pill text-bg-success px-3 py-2">
-
-                            <i class="bi bi-check-circle-fill me-1"></i>
-
-                            Ativo
-
+                            <i class="bi bi-check-circle-fill me-1"></i>Ativo
                         </span>
-
                     <?php else: ?>
-
                         <span class="badge rounded-pill text-bg-danger px-3 py-2">
-
-                            <i class="bi bi-x-circle-fill me-1"></i>
-
-                            Desativado
-
+                            <i class="bi bi-x-circle-fill me-1"></i>Desativado
                         </span>
-
                     <?php endif; ?>
-
-
-
                 </header>
 
-
-
-                <!-- =====================================
-                     CORPO DO PERFIL
-                ===================================== -->
-
                 <div class="card-body p-3 p-md-4 p-lg-5">
-
-
-                    <!-- =====================================
-                         DADOS PESSOAIS
-                    ===================================== -->
-
-                    <section class="mb-5">
-
+                    <section class="mb-4">
                         <h2 class="h5 secao-perfil mb-3">
-
-                            <i class="bi bi-person-vcard me-2"></i>
-
-                            Dados pessoais
-
+                            <i class="bi bi-person-vcard me-2"></i>Dados pessoais
                         </h2>
 
-
                         <div class="row g-3">
-
-                            <!-- NOME -->
-
                             <div class="col-12 col-md-6">
-
                                 <div class="campo-perfil">
-
-                                    <small class="campo-label">
-                                        Nome completo
-                                    </small>
-
-                                    <span class="campo-valor">
-                                        <?= $usuario->nome ?>
-                                    </span>
-
+                                    <small class="campo-label">Nome completo</small>
+                                    <span class="campo-valor"><?= $esc($nome) ?></span>
                                 </div>
-
                             </div>
 
-
-                            <!-- MATRÍCULA -->
-
                             <div class="col-12 col-md-6">
-
                                 <div class="campo-perfil">
-
-                                    <small class="campo-label">
-                                        Matrícula
-                                    </small>
-
-                                    <span class="campo-valor">
-                                        <?= $usuario->matricula ?>
+                                    <small class="campo-label">Matrícula</small>
+                                    <span class="campo-valor <?= $matricula === '' ? 'vazio' : '' ?>">
+                                        <?= $esc($matricula !== '' ? $matricula : 'Não informada') ?>
                                     </span>
-
                                 </div>
-
                             </div>
 
-
-                            <!-- DATA DE NASCIMENTO -->
-
                             <div class="col-12 col-md-6">
-
                                 <div class="campo-perfil">
-
                                     <small class="campo-label">
-                                        Data de nascimento
+                                        <i class="bi bi-calendar3 me-1"></i>Data de nascimento
                                     </small>
-
                                     <span class="campo-valor">
-                                        <?= Controller::formatarData($usuario->data_nascimento, "d/m/Y") ?>
+                                        <?= $esc($formatarData($usuario->data_nascimento ?? null)) ?>
                                     </span>
-
                                 </div>
-
                             </div>
 
-
-                            <!-- SÉRIE -->
-
                             <div class="col-12 col-md-6">
-
                                 <div class="campo-perfil">
-
-                                    <small class="campo-label">
-                                        Série
-                                    </small>
-
-                                    <span class="campo-valor">
-                                        <?= $usuario->serie ?>
+                                    <small class="campo-label">Série</small>
+                                    <span class="campo-valor <?= $serie === '' ? 'vazio' : '' ?>">
+                                        <?= $esc($serie !== '' ? $serie : 'Não informada') ?>
                                     </span>
-
                                 </div>
-
                             </div>
-
-                            
-                                <div class="col-12 col-md-6">
-
-                                    <div class="campo-perfil">
-
-                                        <small class="campo-label">
-                                            Nível de acesso
-                                        </small>
-
-                                        <span class="campo-valor">
-                                            <?= (isset($usuario->acesso))?$usuario->acesso:0 ?>
-                                        </span>
-
-                                    </div>
-
-                                </div>
-                        
                         </div>
-
-
-
-
                     </section>
 
+                    <hr class="separador-perfil my-4">
 
+                    <section class="mb-4">
+                        <h2 class="h5 secao-perfil mb-3">
+                            <i class="bi bi-shield-lock me-2"></i>Informações de acesso
+                        </h2>
 
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="campo-perfil">
+                                    <small class="campo-label">Nível de acesso</small>
+                                    <span class="campo-valor"><?= $nivelAcesso ?></span>
+                                </div>
+                            </div>
+
+                            <?php if (!empty($usuario->usuario)): ?>
+                                <div class="col-12 col-md-6">
+                                    <div class="campo-perfil">
+                                        <small class="campo-label">Usuário de acesso</small>
+                                        <span class="campo-valor"><?= $esc($usuario->usuario) ?></span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+
+                    <?php if ($nivelSessao >= 1): ?>
+                        <hr class="separador-perfil my-4">
+                        <div class="d-flex justify-content-end">
+                            <a href="/atualizar/myself" class="btn btn-primary fw-semibold px-4 py-2 botao-editar">
+                                <i class="bi bi-pencil-square me-2"></i>Editar meu perfil
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
-
             </section>
-
         </div>
-
     </div>
-
 </main>

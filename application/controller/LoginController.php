@@ -2,6 +2,7 @@
 
 namespace controller;
 
+use view\Flash_msg;
 use view\View;
 use model\credenciais\Credenciais;
 use controller\serie\SerieController;
@@ -35,7 +36,13 @@ abstract class LoginController extends Controller
                 $usuario = new Credenciais();
                 $usuario->usuario = $_POST['usuario'];
                 $usuario->senha = $_POST['senha'];
-                if (is_object($usuario = $usuario->logar())) {
+                $usuario = $usuario -> logar();
+                if ($usuario !==  false ) {
+                    if($usuario->ativo != true){
+                        new Flash_msg(423)->flashMsg();
+                        header('location: /login');
+                        exit;
+                    }
                     $_SESSION['usuario'] = $usuario->usuario;
                     $_SESSION['id_credencial'] = $usuario->id;
                     $_SESSION['criado_em'] = $usuario->criado_em;
@@ -85,11 +92,9 @@ abstract class LoginController extends Controller
                         exit;
                     }
                 } else {
-                    $model = [
-                        "error" => "404",
-                        "msg" => "Credenciais Invalidas!"
-                    ];
-                    new View("Login", View::$nav_footer, View::$formPost . "form_login.php", $model)->renderizar();
+                    new Flash_msg(401)->flashMsg();
+                    header('location: /login');
+                    exit;
                 }
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -101,7 +106,8 @@ abstract class LoginController extends Controller
     public static function logout(): void
     {
         session_destroy();
-        header('location: /');
+        header('location: /login');
         exit;
     }
+
 }

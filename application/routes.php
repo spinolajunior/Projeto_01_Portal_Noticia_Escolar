@@ -8,6 +8,7 @@ use controller\evento\EventoController;
 use controller\LogController;
 use controller\UsuarioController;
 use controller\LoginController;
+use view\Flash_msg;
 
 
 $uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
@@ -16,6 +17,18 @@ switch ($uri) {
 
     case "/":
         HomeController::index();
+        break;
+    case "/contato":
+        new Flash_msg(0,'Esta view ainda não foi implementada!')->flashMsg();
+        HomeController::not_found();
+        break;
+    case "/cetidam":
+         new Flash_msg(0,'Esta view ainda não foi implementada!')->flashMsg();
+         HomeController::not_found();
+         break;
+
+    case "/not_found":
+        HomeController::not_found();
         break;
 
     case "/login":
@@ -48,6 +61,7 @@ switch ($uri) {
         UsuarioController::gerenciarUsuario();
         break;
     case "/excluir/usuario":
+        // UsuarioController::excluir();
         break;
     case "/painel/acesso/usuario":
         UsuarioController::updateAcessoUsuario();

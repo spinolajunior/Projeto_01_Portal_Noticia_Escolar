@@ -5,6 +5,8 @@ namespace controller\aviso;
 use controller\Controller;
 use controller\LoginController;
 use model\aviso\Aviso;
+use model\Escola\Escola;
+use view\Flash_msg;
 use view\View;
 
 abstract class AvisoController extends Controller
@@ -32,14 +34,26 @@ abstract class AvisoController extends Controller
         if ($_SERVER['REQUEST_METHOD'] == "GET") {
             new View("Cadastro Aviso!", View::$nav_footer, View::$formCreate . "cadastrar_aviso.php", null)->renderizar();
         }if($_SERVER['REQUEST_METHOD'] == 'POST'){
-            $id_admin = $_SESSION["id_usuario"];
+
+            $id_usuario = $_SESSION["id_usuario"];
             $obj = new Aviso();
             $obj->titulo = $_POST['titulo'];
             $obj->ativo = '1';
-            $obj->id_administrador = $id_admin;
+
+            if(!isset($_SESSION['id_tipo_adm'])){
+                $obj->id_aluno_adm = $id_usuario;
+            }else{
+                $obj->id_aluno_adm = $id_usuario;
+            }
+
             if($obj->insert()){
-             header('location: /painel/aviso');
-             exit;
+                new Flash_msg(201)->flashMsg();
+                header('location: /painel/aviso');
+                exit;
+            }else{
+                new Flash_msg(501)->flashMsg();
+                header('location: /painel/aviso');
+                exit;
             }
         }
     }

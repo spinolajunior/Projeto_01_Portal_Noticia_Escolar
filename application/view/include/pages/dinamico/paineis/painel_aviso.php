@@ -1,21 +1,68 @@
 <?php
-
 $avisos = $model["avisos"] ?? [];
 
 if (!is_iterable($avisos)) {
     $avisos = [];
 }
 
-$quantidadeAvisos = is_countable($avisos)
-    ? count($avisos)
-    : 0;
+$exibirValor = static function ($valor, string $padrao = "-"): string {
+    $valor = trim((string)($valor ?? ""));
+    return htmlspecialchars(
+        $valor !== "" ? $valor : $padrao,
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        "UTF-8"
+    );
+};
 
+$listaAvisos = [];
+
+foreach ($avisos as $aviso) {
+    if (!is_object($aviso) && !is_array($aviso)) {
+        continue;
+    }
+
+    $aviso = (object)$aviso;
+
+    $id = (int)($aviso->id ?? 0);
+    $titulo = trim((string)($aviso->titulo ?? ""));
+    $ativo = $aviso->ativo ?? null;
+
+    if ($ativo !== null && (string)$ativo !== "") {
+        if ((int)$ativo === 1) {
+            $statusTexto = "Ativo";
+            $statusClasse = "success";
+            $statusIcone = "bi-check-circle";
+        } elseif ((int)$ativo === 0) {
+            $statusTexto = "Inativo";
+            $statusClasse = "danger";
+            $statusIcone = "bi-x-circle";
+        } else {
+            $statusTexto = "Indefinido";
+            $statusClasse = "secondary";
+            $statusIcone = "bi-question-circle";
+        }
+    } else {
+        $statusTexto = "Indefinido";
+        $statusClasse = "secondary";
+        $statusIcone = "bi-question-circle";
+    }
+
+    $listaAvisos[] = [
+        "id" => $id,
+        "titulo" => $titulo !== "" ? $titulo : "Título não informado",
+        "status" => $statusTexto,
+        "classe" => $statusClasse,
+        "icone" => $statusIcone
+    ];
+}
+
+$quantidadeAvisos = count($listaAvisos);
 ?>
 
-<main class="container-fluid py-3 py-md-4">
+<main class="container-fluid py-3 py-md-4 painel-avisos">
 
     <style>
-        .painel-cabecalho {
+        .painel-avisos .painel-cabecalho {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -23,25 +70,26 @@ $quantidadeAvisos = is_countable($avisos)
             margin-bottom: 1.5rem;
         }
 
-        .painel-cabecalho h1 {
+        .painel-avisos .painel-cabecalho h1 {
             font-size: 1.6rem;
             font-weight: 700;
             margin: 0;
         }
 
-        .painel-acoes {
+        .painel-avisos .painel-acoes {
             display: flex;
             gap: .6rem;
+            flex-shrink: 0;
         }
 
-        .painel-card {
+        .painel-avisos .painel-card {
             border: 0;
             border-radius: .8rem;
             overflow: hidden;
         }
 
-        .painel-card-header {
-            background-color: #0d6efd;
+        .painel-avisos .painel-card-header {
+            background: #0d6efd;
             color: #fff;
             padding: .9rem 1rem;
             display: flex;
@@ -50,26 +98,50 @@ $quantidadeAvisos = is_countable($avisos)
             gap: .75rem;
         }
 
-        .painel-card-header h2 {
+        .painel-avisos .painel-card-header h2 {
             font-size: 1rem;
             font-weight: 600;
             margin: 0;
         }
 
-        .quantidade-registros {
-            background-color: rgba(255, 255, 255, .2);
+        .painel-avisos .quantidade-registros {
+            background: rgba(255, 255, 255, .2);
             padding: .2rem .55rem;
             border-radius: 2rem;
             font-size: .75rem;
             white-space: nowrap;
         }
 
-        .tabela-gerenciamento {
-            margin-bottom: 0;
+        .painel-avisos .barra-busca {
+            background: #fff;
+            padding: .85rem 1rem;
+            border-bottom: 1px solid #edf0f4;
         }
 
-        .tabela-gerenciamento thead th {
-            background-color: #e9f2ff;
+        .painel-avisos .barra-busca .input-group {
+            max-width: 430px;
+        }
+
+        .painel-avisos .barra-busca .form-control,
+        .painel-avisos .barra-busca .input-group-text {
+            border-color: #dce3ed;
+        }
+
+        .painel-avisos .tabela-scroll {
+            max-height: 400px;
+            overflow: auto;
+        }
+
+        .painel-avisos .tabela-gerenciamento {
+            margin-bottom: 0;
+            min-width: 650px;
+        }
+
+        .painel-avisos .tabela-gerenciamento thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #e9f2ff;
             color: #212529;
             font-weight: 600;
             border-bottom: 2px solid #0d6efd;
@@ -78,501 +150,559 @@ $quantidadeAvisos = is_countable($avisos)
             height: 48px;
         }
 
-        .tabela-gerenciamento th:not(:last-child),
-        .tabela-gerenciamento td:not(:last-child) {
+        .painel-avisos .tabela-gerenciamento th:not(:last-child),
+        .painel-avisos .tabela-gerenciamento td:not(:last-child) {
             border-right: 1px solid #d9e2ef;
         }
 
-        .tabela-gerenciamento thead th:not(:last-child) {
-            border-right: 1px solid #c7d7ee;
+        .painel-avisos .tabela-gerenciamento thead th:not(:last-child) {
+            border-right-color: #c7d7ee;
         }
 
-        .tabela-gerenciamento tbody tr {
+        .painel-avisos .tabela-gerenciamento tbody tr {
             height: 58px;
-            transition: background-color .18s ease;
         }
 
-        .tabela-gerenciamento tbody td {
-            background-color: #fff;
+        .painel-avisos .tabela-gerenciamento tbody td {
+            background: #fff;
             vertical-align: middle;
         }
 
-        .tabela-gerenciamento tbody tr:hover td {
-            background-color: #f8fbff;
+        .painel-avisos .tabela-gerenciamento tbody tr:hover td {
+            background: #f8fbff;
         }
 
-        .titulo-aviso-desktop {
+        .painel-avisos .titulo-aviso-desktop {
             font-weight: 600;
             overflow-wrap: anywhere;
         }
 
-        .status-aviso {
+        .painel-avisos .status-aviso {
+            display: inline-block;
             font-size: .75rem;
             font-weight: 600;
             min-width: 85px;
-            display: inline-block;
+            padding: .45rem .6rem;
         }
 
-        .acoes-tabela {
+        .painel-avisos .acoes-tabela {
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             gap: .45rem;
             white-space: nowrap;
         }
 
-        .acao-tabela {
+        .painel-avisos .acao-tabela {
             border-radius: .4rem;
-            transition: transform .18s ease;
+            transition: transform .18s;
         }
 
-        .acao-tabela:hover {
+        .painel-avisos .acao-tabela:hover {
             transform: translateY(-1px);
         }
 
-        .card-aviso-mobile {
-            border: 1px solid #dee2e6;
-            border-radius: .8rem;
-            overflow: hidden;
-            background-color: #fff;
+        .painel-avisos .cards-mobile {
+            display: none;
+            background: #f8fafc;
         }
 
-        .card-aviso-mobile .card-header {
-            background-color: #0d6efd;
-            color: #fff;
-            border: 0;
-            padding: .9rem 1rem;
+        .painel-avisos .cards-mobile-lista {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .75rem;
+            padding: .85rem;
         }
 
-        .card-aviso-mobile .titulo-aviso {
-            font-size: 1rem;
+        .painel-avisos .card-aviso-mobile {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: .75rem;
+            padding: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+            min-width: 0;
+        }
+
+        .painel-avisos .aviso-mobile-topo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .6rem;
+            margin-bottom: .75rem;
+        }
+
+        .painel-avisos .aviso-mobile-identificacao {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            color: #64748b;
+            font-size: .8rem;
             font-weight: 600;
-            line-height: 1.5;
-            overflow-wrap: anywhere;
         }
 
-        .card-aviso-mobile .info-label {
-            color: #6c757d;
-            font-size: .78rem;
-            margin-bottom: .15rem;
-        }
-
-        .card-aviso-mobile .info-valor {
-            font-size: .9rem;
-            overflow-wrap: anywhere;
-        }
-
-        .card-aviso-mobile .icone-info {
-            width: 22px;
-            flex-shrink: 0;
+        .painel-avisos .aviso-mobile-icone {
+            width: 29px;
+            height: 29px;
+            border-radius: 8px;
+            background: #eaf2ff;
             color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .acoes-mobile {
+        .painel-avisos .titulo-aviso-mobile {
+            font-size: .96rem;
+            line-height: 1.5;
+            font-weight: 700;
+            color: #263345;
+            overflow-wrap: anywhere;
+            margin-bottom: .9rem;
+        }
+
+        .painel-avisos .acoes-mobile {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: .5rem;
+            gap: .55rem;
+            border-top: 1px solid #edf0f4;
+            padding-top: .85rem;
         }
 
-        .acoes-mobile .btn {
+        .painel-avisos .acoes-mobile .btn {
             width: 100%;
+            min-height: 39px;
+            border-radius: 7px;
+            font-size: .85rem;
+            font-weight: 600;
         }
 
-        .estado-vazio {
-            padding: 3rem 1rem;
+        .painel-avisos .mobile-lista-rodape {
+            padding: .4rem .85rem 1rem;
             text-align: center;
+        }
+
+        .painel-avisos .mobile-lista-contador {
+            font-size: .78rem;
+            color: #6c757d;
+            margin-bottom: .65rem;
+        }
+
+        .painel-avisos .mobile-mostrar-mais {
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+            padding: .55rem 1.25rem;
+        }
+
+        .painel-avisos .estado-vazio {
+            text-align: center;
+            padding: 3rem 1rem;
             color: #6c757d;
         }
 
-        .estado-vazio i {
+        .painel-avisos .estado-vazio i {
             display: block;
             font-size: 2.5rem;
             margin-bottom: .75rem;
         }
 
-        @media (max-width: 767.98px) {
+        .painel-avisos .sem-resultados {
+            padding: 2.5rem 1rem;
+            text-align: center;
+            color: #6c757d;
+        }
 
-            .painel-cabecalho {
+        .painel-avisos [hidden] {
+            display: none !important;
+        }
+
+        .painel-avisos .tabela-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .painel-avisos .tabela-scroll::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 10px;
+        }
+
+        .painel-avisos .tabela-scroll::-webkit-scrollbar-track {
+            background: #f1f3f5;
+        }
+
+        @media(min-width:700px) and (max-width:991.98px) {
+            .painel-avisos .cards-mobile-lista {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media(max-width:991.98px) {
+            .painel-avisos .tabela-desktop {
+                display: none;
+            }
+
+            .painel-avisos .cards-mobile {
+                display: block;
+            }
+        }
+
+        @media(max-width:767.98px) {
+            .painel-avisos .painel-cabecalho {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .painel-cabecalho h1 {
+            .painel-avisos .painel-cabecalho h1 {
                 font-size: 1.35rem;
             }
 
-            .painel-acoes {
+            .painel-avisos .painel-acoes {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
             }
 
-            .painel-acoes .btn {
+            .painel-avisos .painel-acoes .btn {
                 width: 100%;
+            }
+
+            .painel-avisos .barra-busca .input-group {
+                max-width: none;
             }
         }
 
-        @media (max-width: 575.98px) {
-
-            .painel-acoes {
+        @media(max-width:575.98px) {
+            .painel-avisos .painel-acoes {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 
     <div class="row justify-content-center">
-
         <div class="col-12 col-xxl-10">
 
             <div class="painel-cabecalho">
-
                 <div>
-
                     <h1>
                         <i class="bi bi-megaphone-fill text-primary me-2"></i>
                         Avisos
                     </h1>
-
                     <div class="text-body-secondary mt-1">
                         Gerencie os avisos publicados no portal.
                     </div>
-
                 </div>
 
                 <div class="painel-acoes">
-
-                    <a
-                        href="/painel/gerenciamento"
-                        class="btn btn-outline-secondary"
-                        onclick="return voltarPainel(event);">
+                    <a href="/painel/gerenciamento" class="btn btn-outline-secondary px-4">
                         <i class="bi bi-arrow-left me-1"></i>
                         Voltar
                     </a>
 
-                    <a
-                        href="/cadastro/aviso"
-                        class="btn btn-primary">
+                    <a href="/cadastro/aviso" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-1"></i>
                         Novo Aviso
                     </a>
-
                 </div>
-
             </div>
 
-            <div class="card shadow-sm painel-card">
+            <section class="card shadow-sm painel-card" data-painel-avisos>
 
                 <div class="painel-card-header">
-
                     <h2>
                         <i class="bi bi-megaphone me-2"></i>
                         Avisos cadastrados
                     </h2>
 
                     <span class="quantidade-registros">
-
                         <?= $quantidadeAvisos ?>
-
-                        <?= $quantidadeAvisos === 1
-                            ? "registro"
-                            : "registros" ?>
-
+                        <?= $quantidadeAvisos === 1 ? "registro" : "registros" ?>
                     </span>
-
                 </div>
 
                 <?php if ($quantidadeAvisos === 0): ?>
 
                     <div class="estado-vazio">
-
                         <i class="bi bi-megaphone"></i>
-
-                        <strong>
-                            Nenhum aviso cadastrado
-                        </strong>
-
+                        <strong>Nenhum aviso cadastrado</strong>
                         <div class="small mt-1">
                             Cadastre um aviso para começar a gerenciar os comunicados.
                         </div>
-
                     </div>
 
                 <?php else: ?>
 
-                    <div class="d-none d-lg-block">
-
-                        <div class="table-responsive">
-
-                            <table class="table table-hover tabela-gerenciamento">
-
-                                <thead>
-
-                                    <tr>
-
-                                        <th class="ps-3 ps-md-4">
-                                            ID
-                                        </th>
-
-                                        <th>
-                                            Título
-                                        </th>
-
-                                        <th class="text-center">
-                                            Status
-                                        </th>
-
-                                        <th class="text-center pe-3 pe-md-4">
-                                            Ações
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-                                <tbody>
-
-                                    <?php foreach ($avisos as $aviso): ?>
-
-                                        <tr>
-
-                                            <td class="ps-3 ps-md-4">
-                                                <?= (int) $aviso->id ?>
-                                            </td>
-
-                                            <td style="min-width: 180px;">
-
-                                                <div class="titulo-aviso-desktop">
-
-                                                    <i class="bi bi-megaphone text-primary me-1"></i>
-
-                                                    <?= htmlspecialchars(
-                                                        $aviso->titulo,
-                                                        ENT_QUOTES,
-                                                        "UTF-8"
-                                                    ) ?>
-
-                                                </div>
-
-                                            </td>
-
-                                            <td class="text-center">
-
-                                                <?php if ($aviso->ativo === null): ?>
-
-                                                    <span class="badge text-bg-secondary status-aviso">
-                                                        Indefinido
-                                                    </span>
-
-                                                <?php elseif ((int) $aviso->ativo === 1): ?>
-
-                                                    <span class="badge text-bg-success status-aviso">
-
-                                                        <i class="bi bi-check-circle me-1"></i>
-                                                        Ativo
-
-                                                    </span>
-
-                                                <?php else: ?>
-
-                                                    <span class="badge text-bg-danger status-aviso">
-
-                                                        <i class="bi bi-x-circle me-1"></i>
-                                                        Inativo
-
-                                                    </span>
-
-                                                <?php endif; ?>
-
-                                            </td>
-
-                                            <td class="pe-3 pe-md-4">
-
-                                                <div class="acoes-tabela">
-
-                                                    <a
-                                                        href="/atualizar/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-warning btn-sm acao-tabela"
-                                                        title="Editar aviso">
-                                                        <i class="bi bi-pencil-square me-1"></i>
-                                                        Editar
-                                                    </a>
-
-                                                    <a
-                                                        href="/excluir/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-danger btn-sm acao-tabela"
-                                                        title="Excluir aviso"
-                                                        onclick="return confirm('Deseja realmente excluir este aviso?');">
-                                                        <i class="bi bi-trash-fill me-1"></i>
-                                                        Excluir
-                                                    </a>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-
-                                    <?php endforeach; ?>
-
-                                </tbody>
-
-                            </table>
-
+                    <div class="barra-busca">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search text-secondary"></i>
+                            </span>
+                            <input
+                                type="search"
+                                class="form-control"
+                                placeholder="Pesquisar por ID, título ou status..."
+                                aria-label="Pesquisar avisos"
+                                autocomplete="off"
+                                data-busca-avisos>
                         </div>
-
                     </div>
 
-                    <div class="d-lg-none p-3">
+                    <div class="tabela-scroll tabela-desktop">
+                        <table class="table table-hover tabela-gerenciamento">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3 ps-md-4">ID</th>
+                                    <th>Título</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center pe-3 pe-md-4">Ações</th>
+                                </tr>
+                            </thead>
 
-                        <div class="row g-3">
+                            <tbody>
+                                <?php foreach ($listaAvisos as $aviso): ?>
+                                    <?php
+                                    $busca = $aviso["id"] . " " . $aviso["titulo"] . " " . $aviso["status"];
+                                    ?>
 
-                            <?php foreach ($avisos as $aviso): ?>
+                                    <tr
+                                        data-linha-aviso
+                                        data-busca="<?= $exibirValor($busca) ?>">
 
-                                <div class="col-12 col-md-6">
+                                        <td class="ps-3 ps-md-4">
+                                            <?= $aviso["id"] ?>
+                                        </td>
 
-                                    <article class="card card-aviso-mobile h-100 shadow-sm">
-
-                                        <div class="card-header">
-
-                                            <div class="d-flex justify-content-between align-items-center gap-2">
-
-                                                <span class="fw-semibold">
-
-                                                    <i class="bi bi-megaphone me-1"></i>
-
-                                                    Aviso #<?= (int) $aviso->id ?>
-
-                                                </span>
-
-                                                <?php if ($aviso->ativo === null): ?>
-
-                                                    <span class="badge text-bg-secondary status-aviso">
-                                                        Indefinido
-                                                    </span>
-
-                                                <?php elseif ((int) $aviso->ativo === 1): ?>
-
-                                                    <span class="badge text-bg-success status-aviso">
-
-                                                        <i class="bi bi-check-circle me-1"></i>
-                                                        Ativo
-
-                                                    </span>
-
-                                                <?php else: ?>
-
-                                                    <span class="badge text-bg-danger status-aviso">
-
-                                                        <i class="bi bi-x-circle me-1"></i>
-                                                        Inativo
-
-                                                    </span>
-
-                                                <?php endif; ?>
-
+                                        <td style="min-width:180px">
+                                            <div class="titulo-aviso-desktop">
+                                                <i class="bi bi-megaphone text-primary me-1"></i>
+                                                <?= $exibirValor($aviso["titulo"]) ?>
                                             </div>
+                                        </td>
 
+                                        <td class="text-center">
+                                            <span class="badge text-bg-<?= $aviso["classe"] ?> status-aviso">
+                                                <i class="bi <?= $aviso["icone"] ?> me-1"></i>
+                                                <?= $aviso["status"] ?>
+                                            </span>
+                                        </td>
+
+                                        <td class="pe-3 pe-md-4">
+                                            <div class="acoes-tabela">
+                                                <a
+                                                    href="/atualizar/aviso?id=<?= $aviso["id"] ?>"
+                                                    class="btn btn-warning btn-sm acao-tabela"
+                                                    title="Editar aviso">
+                                                    <i class="bi bi-pencil-square me-1"></i>
+                                                    Editar
+                                                </a>
+
+                                                <a
+                                                    href="/excluir/aviso?id=<?= $aviso["id"] ?>"
+                                                    class="btn btn-danger btn-sm acao-tabela"
+                                                    title="Excluir aviso"
+                                                    data-confirmar-exclusao
+                                                    data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                                    <i class="bi bi-trash-fill me-1"></i>
+                                                    Excluir
+                                                </a>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="cards-mobile">
+                        <div class="cards-mobile-lista">
+
+                            <?php foreach ($listaAvisos as $aviso): ?>
+                                <?php
+                                $busca = $aviso["id"] . " " . $aviso["titulo"] . " " . $aviso["status"];
+                                ?>
+
+                                <article
+                                    class="card-aviso-mobile"
+                                    data-card-aviso
+                                    data-busca="<?= $exibirValor($busca) ?>">
+
+                                    <div class="aviso-mobile-topo">
+                                        <div class="aviso-mobile-identificacao">
+                                            <div class="aviso-mobile-icone">
+                                                <i class="bi bi-megaphone"></i>
+                                            </div>
+                                            Aviso #<?= $aviso["id"] ?>
                                         </div>
 
-                                        <div class="card-body d-flex flex-column">
+                                        <span class="badge text-bg-<?= $aviso["classe"] ?> status-aviso">
+                                            <?= $aviso["status"] ?>
+                                        </span>
+                                    </div>
 
-                                            <h2 class="titulo-aviso h6 mb-3">
+                                    <h3 class="titulo-aviso-mobile">
+                                        <?= $exibirValor($aviso["titulo"]) ?>
+                                    </h3>
 
-                                                <?= htmlspecialchars(
-                                                    $aviso->titulo,
-                                                    ENT_QUOTES,
-                                                    "UTF-8"
-                                                ) ?>
+                                    <div class="acoes-mobile">
+                                        <a
+                                            href="/atualizar/aviso?id=<?= $aviso["id"] ?>"
+                                            class="btn btn-warning">
+                                            <i class="bi bi-pencil-square me-1"></i>
+                                            Editar
+                                        </a>
 
-                                            </h2>
+                                        <a
+                                            href="/excluir/aviso?id=<?= $aviso["id"] ?>"
+                                            class="btn btn-danger"
+                                            data-confirmar-exclusao
+                                            data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                            <i class="bi bi-trash-fill me-1"></i>
+                                            Excluir
+                                        </a>
+                                    </div>
 
-                                            <div class="d-flex align-items-start gap-2 mb-3">
-
-                                                <i class="bi bi-info-circle icone-info fs-5"></i>
-
-                                                <div
-                                                    class="flex-grow-1"
-                                                    style="min-width: 0;">
-
-                                                    <div class="info-label">
-                                                        Situação do aviso
-                                                    </div>
-
-                                                    <div class="info-valor fw-medium">
-
-                                                        <?php if ($aviso->ativo === null): ?>
-
-                                                            Não definida
-
-                                                        <?php elseif ((int) $aviso->ativo === 1): ?>
-
-                                                            Ativo
-
-                                                        <?php else: ?>
-
-                                                            Inativo
-
-                                                        <?php endif; ?>
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                            <div class="mt-auto pt-3 border-top">
-
-                                                <div class="acoes-mobile">
-
-                                                    <a
-                                                        href="/atualizar/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-warning">
-                                                        <i class="bi bi-pencil-square me-1"></i>
-                                                        Editar
-                                                    </a>
-
-                                                    <a
-                                                        href="/excluir/aviso?id=<?= (int) $aviso->id ?>"
-                                                        class="btn btn-danger"
-                                                        onclick="return confirm('Deseja realmente excluir este aviso?');">
-                                                        <i class="bi bi-trash-fill me-1"></i>
-                                                        Excluir
-                                                    </a>
-
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    </article>
-
-                                </div>
+                                </article>
 
                             <?php endforeach; ?>
 
                         </div>
 
+                        <div class="mobile-lista-rodape" data-rodape-mobile>
+                            <div class="mobile-lista-contador" data-contador-mobile></div>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary mobile-mostrar-mais"
+                                data-mostrar-mais
+                                hidden>
+                                <i class="bi bi-chevron-down me-1"></i>
+                                <span data-texto-mais>Mostrar mais 5</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sem-resultados" data-sem-resultados hidden>
+                        <i class="bi bi-search fs-2 d-block mb-2"></i>
+                        Nenhum aviso corresponde à pesquisa.
                     </div>
 
                 <?php endif; ?>
 
-            </div>
-
+            </section>
         </div>
-
     </div>
-
 </main>
 
 <script>
-    function voltarPainel(event) {
+    document.addEventListener("DOMContentLoaded", () => {
 
-        if (window.history.length > 1) {
-            event.preventDefault();
-            window.history.back();
-            return false;
+        const painel = document.querySelector(".painel-avisos [data-painel-avisos]");
+        if (!painel) return;
+
+        const normalizar = texto => String(texto || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+
+        const busca = painel.querySelector("[data-busca-avisos]");
+        const linhas = [...painel.querySelectorAll("[data-linha-aviso]")];
+        const cards = [...painel.querySelectorAll("[data-card-aviso]")];
+        const botaoMais = painel.querySelector("[data-mostrar-mais]");
+        const textoMais = painel.querySelector("[data-texto-mais]");
+        const contador = painel.querySelector("[data-contador-mobile]");
+        const rodape = painel.querySelector("[data-rodape-mobile]");
+        const semResultados = painel.querySelector("[data-sem-resultados]");
+
+        let limiteMobile = 5;
+
+        function atualizarLista() {
+            if (!busca) return;
+
+            const termo = normalizar(busca.value);
+            let encontrados = 0;
+            let exibidos = 0;
+
+            linhas.forEach(linha => {
+                const corresponde = normalizar(linha.dataset.busca).includes(termo);
+                linha.hidden = !corresponde;
+            });
+
+            cards.forEach(card => {
+                const corresponde = normalizar(card.dataset.busca).includes(termo);
+
+                if (!corresponde) {
+                    card.hidden = true;
+                    return;
+                }
+
+                encontrados++;
+
+                if (exibidos < limiteMobile) {
+                    card.hidden = false;
+                    exibidos++;
+                } else {
+                    card.hidden = true;
+                }
+            });
+
+            if (semResultados) {
+                semResultados.hidden = encontrados !== 0;
+            }
+
+            if (rodape) {
+                rodape.hidden = encontrados === 0;
+            }
+
+            if (contador) {
+                contador.textContent = "Exibindo " + exibidos + " de " + encontrados + " avisos";
+            }
+
+            if (botaoMais) {
+                const restantes = Math.max(0, encontrados - limiteMobile);
+                botaoMais.hidden = restantes === 0;
+
+                if (textoMais) {
+                    textoMais.textContent = "Mostrar mais " + Math.min(5, restantes);
+                }
+            }
         }
 
-        return true;
-    }
+        if (busca) {
+            busca.addEventListener("input", () => {
+                limiteMobile = 5;
+                atualizarLista();
+            });
+        }
+
+        if (botaoMais) {
+            botaoMais.addEventListener("click", () => {
+                limiteMobile += 5;
+                atualizarLista();
+            });
+        }
+
+        painel.querySelectorAll("[data-confirmar-exclusao]").forEach(link => {
+            link.addEventListener("click", event => {
+                const titulo = link.dataset.titulo || "este aviso";
+
+                const confirmar = confirm(
+                    'Deseja realmente excluir o aviso "' + titulo + '"?\n\nEssa ação não poderá ser desfeita.'
+                );
+
+                if (!confirmar) {
+                    event.preventDefault();
+                    return;
+                }
+
+                if (link.dataset.enviando === "1") {
+                    event.preventDefault();
+                    return;
+                }
+
+                link.dataset.enviando = "1";
+            });
+        });
+
+        atualizarLista();
+    });
 </script>

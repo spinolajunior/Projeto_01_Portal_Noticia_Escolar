@@ -5,6 +5,7 @@ namespace DAOs\aluno;
 use model\aluno\Aluno;
 use DAOS\DAO;
 use \PDO;
+use Throwable;
 
 class AlunoDAO extends DAO
 {
@@ -48,12 +49,16 @@ class AlunoDAO extends DAO
     }
     public function getById(int $id): Aluno|bool
     {
+        try{
         $query = "SELECT * FROM aluno WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $id);
         $stmt->execute();
         $model = $stmt->fetchObject(Aluno::class);
         return ($model !== false) ? $model : false;
+        }catch (Throwable $e){
+            return false;
+        }
     }
     public function get(): array
     {

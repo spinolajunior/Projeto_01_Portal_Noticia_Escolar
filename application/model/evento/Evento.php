@@ -10,7 +10,10 @@ final class Evento
     public ?int $id = null;
     public string $titulo;
     public string $data_evento;
-    public int $id_administrador;
+    public ?int $id_administrador = null;
+    public ?int $id_aluno_adm = null;
+
+
 
     public function get(): array|bool
     {

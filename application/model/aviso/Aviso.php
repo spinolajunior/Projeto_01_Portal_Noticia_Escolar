@@ -10,7 +10,8 @@ final class Aviso
     public ?int $id = null;
     public string $titulo;
     public bool $ativo;
-    public int $id_administrador;
+    public ?int $id_administrador = null;
+    public ?int $id_aluno_adm = null;
 
     public function get(): Aviso|bool
     {

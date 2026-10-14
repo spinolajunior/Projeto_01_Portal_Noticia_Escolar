@@ -14,6 +14,7 @@ final class Noticia
     public string $data_pub;
     public bool $status;
     public ?int $id_administrador = null;
+    public ?int $id_aluno_adm = null;
     public ?string $nome_autor = null;
 
     public function get(): Noticia|bool

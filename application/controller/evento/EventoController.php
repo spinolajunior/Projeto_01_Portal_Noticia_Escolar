@@ -4,6 +4,7 @@ namespace controller\evento;
 
 use controller\LoginController;
 use controller\Controller;
+use view\Flash_msg;
 use view\View;
 use model\evento\Evento;
 
@@ -21,16 +22,27 @@ abstract class EventoController extends Controller
     public static function insert()
     {
         LoginController::logadoRedirect("/cadastro/evento");
+        LoginController::verificarAcesso((object)$_SESSION,1);
+        
         if ($_SERVER['REQUEST_METHOD'] == "GET") {
             new View("Cadastrar Evento!", VIEW::$nav_footer, VIEW::$formCreate . "cadastrar_evento.php", null)->renderizar();
-        }elseif($_SERVER['REQUEST_METHOD'] == "POST"){
-            $id_admin = $_SESSION["id_usuario"];
+        } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
             $obj = new Evento();
             $obj->titulo = $_POST["titulo"];
             $obj->data_evento = $_POST["data_evento"];
-            $obj->id_administrador = $id_admin;
-            
-            if($obj->insert()){
+
+            if (!isset($_SESSION['id_tipo_adm'])) {
+                $obj->id_aluno_adm = (int)$_SESSION['id_usuario'];
+            } else {
+                $obj->id_administrador = (int)$_SESSION["id_usuario"];
+            }
+
+            if ($obj->insert()) {
+                new Flash_msg(201)->flashMsg();
+                header("location: /painel/evento");
+                exit;
+            }else{
+                new Flash_msg(501)->flashMsg();
                 header("location: /painel/evento");
                 exit;
             }
@@ -70,9 +82,10 @@ abstract class EventoController extends Controller
         }
     }
     public static function get() {}
-    public static function getAll():array {
+    public static function getAll(): array
+    {
         $consulta = new Evento()->get();
-        return ($consulta != false)?$consulta:[];
+        return ($consulta != false) ? $consulta : [];
     }
     public static function getById() {}
 }

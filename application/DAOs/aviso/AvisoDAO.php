@@ -5,19 +5,36 @@ namespace DAOs\aviso;
 use model\aviso\Aviso;
 use \PDO;
 use DAOs\DAO;
+use Throwable;
 
 class AvisoDAO extends DAO
 {
 
     public function insert(Aviso $model): Aviso|bool
     {
-        $query = "INSERT INTO aviso (titulo, ativo, id_administrador)
+        try {
+
+            $id_usuario = null;
+            $query = null;
+
+            if ($model->id_administrador != null) {
+                $id_usuario = $model->id_administrador;
+                $query = "INSERT INTO aviso (titulo, ativo, id_administrador)
                   VALUES (?, ?, ?);";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $model->titulo);
-        $stmt->bindValue(2, $model->ativo);
-        $stmt->bindValue(3, $model->id_administrador);
-        return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
+            } elseif ($model->id_aluno_adm != null) {
+                $id_usuario = $model->id_aluno_adm;
+                $query = "INSERT INTO aviso (titulo, ativo, id_aluno_adm)
+                  VALUES (?, ?, ?);";
+            }
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $model->titulo);
+            $stmt->bindValue(2, $model->ativo);
+            $stmt->bindValue(3, $id_usuario);
+            return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
     public function update(Aviso $model): Aviso|bool
     {
@@ -27,7 +44,7 @@ class AvisoDAO extends DAO
                   WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $model->titulo);
-        $stmt->bindValue(2, (int)$model->ativo,PDO::PARAM_INT);
+        $stmt->bindValue(2, (int)$model->ativo, PDO::PARAM_INT);
         $stmt->bindValue(3, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
     }

@@ -3,6 +3,7 @@
 namespace model\Aluno;
 
 use DAOs\aluno\AlunoDAO;
+use DAOs\usuario\UsuarioDAO;
 
 final class Aluno
 {
@@ -17,6 +18,7 @@ final class Aluno
     public ?int $id_tipo_adm = null;
 
     public ?int $ativo = null;
+    public ?array $array = null;
 
     public function get(): Aluno|bool
     {
@@ -49,5 +51,9 @@ final class Aluno
     public function alunoStatus(): array|bool
     {
         return new AlunoDAO()->alunoStatus();
+    }
+
+    public function atualizarDados(): bool{
+        return new UsuarioDAO()->atualizarAluno($this->array);
     }
 }

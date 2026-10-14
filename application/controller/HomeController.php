@@ -75,4 +75,8 @@ abstract class HomeController extends Controller
         LoginController::logadoRedirect("/painel/gerenciamento");
         new View("Painel Gerenciamento!", View::$nav_footer, View::$dinamico . "gerenciamento.php", null)->renderizar();
     }
+
+    public static function not_found(){
+        new View('Não encontrado!',View::$nav_footer,View::$estatico.'error_404.php',null)->renderizar();
+    }
 }

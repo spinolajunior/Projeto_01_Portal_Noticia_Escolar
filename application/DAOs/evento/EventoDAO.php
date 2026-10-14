@@ -5,18 +5,37 @@ namespace DAOs\evento;
 use DAOs\DAO;
 use model\evento\Evento;
 use PDO;
+use Throwable;
 
 class EventoDAO extends DAO
 {
     public function insert(Evento $evento): Evento|bool
     {
-        $query = "INSERT INTO evento (titulo,data_evento,id_administrador)
+        try {
+
+            $query = null;
+            $id_usuario = null;
+
+            if ($evento->id_administrador != null) {
+                $id_usuario = $evento->id_administrador;
+                $query = "INSERT INTO evento (titulo,data_evento,id_administrador)
                   VALUES (?,?,?);";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $evento->titulo);
-        $stmt->bindValue(2, $evento->data_evento);
-        $stmt->bindValue(3, $evento->id_administrador);
-        return ($stmt->execute()) ? $this->getById((int)$this->pdo->lastInsertId()) : false;
+            } elseif ($evento->id_aluno_adm != null) {
+                $id_usuario = $evento->id_aluno_adm;
+                $query = "INSERT INTO evento (titulo,data_evento,id_aluno_adm)
+                  VALUES (?,?,?);";
+            }
+
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $evento->titulo);
+            $stmt->bindValue(2, $evento->data_evento);
+            $stmt->bindValue(3, $id_usuario);
+
+            return ($stmt->execute()) ? $this->getById((int)$this->pdo->lastInsertId()) : false;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
     public function get(): array|bool
     {

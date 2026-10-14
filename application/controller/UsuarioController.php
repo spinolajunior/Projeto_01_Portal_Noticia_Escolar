@@ -11,6 +11,7 @@ use controller\serie\SerieController;
 use model\credenciais\Credenciais;
 use model\credenciais\CredenciaisCadastroAdministrador;
 use model\credenciais\CredenciaisCadastroAluno;
+use Throwable;
 
 abstract class UsuarioController extends Controller
 {
@@ -18,7 +19,7 @@ abstract class UsuarioController extends Controller
     public static function perfil()
     {
         LoginController::logadoRedirect("/perfil");
-        $model = ['usuario' => (object)$_SESSION];
+        $model = ['session' => (object)$_SESSION];
         if (!isset($_SESSION["id_tipo_adm"])) {
 
             new View("Perfil", View::$nav_footer, View::$dinamico . "perfil_aluno.php", $model)->renderizar();
@@ -29,6 +30,7 @@ abstract class UsuarioController extends Controller
 
     public static function editarPerfil()
     {
+
         $session = (object)$_SESSION;
         LoginController::logadoRedirect("/atualizar/myself");
         LoginController::verificarAcesso($session, 1);
@@ -46,6 +48,7 @@ abstract class UsuarioController extends Controller
                 $credencial = new Credenciais();
                 $credencial->id = $session->id_credencial;
                 $credencial = $credencial->get();
+
 
                 $model = [
                     "usuario" => $usuario,
@@ -71,57 +74,80 @@ abstract class UsuarioController extends Controller
                 ];
                 new View("Atualizar Perfil!", View::$nav_footer, View::$formEdit . 'edit_myself_aluno.php', $model)->renderizar();
             }
-        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($session->id_tipo_adm)) {
-            echo ("post here! <br>");
-            var_dump($_POST);
+        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $post = (object)$_POST;
-            $usuario = new Administrador();
-            $usuario->id = $post->id;
-            $usuario->nome = $post->nome;
-            $usuario->matricula = $post->matricula;
-            $usuario = $usuario->update();
 
-            $credencial = new Credenciais();
-            $credencial->id = $post->id_credenciais;
-            $credencial->usuario = $post->usuario;
-            $credencial->senha = $post->senha;
-            $credencial = $credencial->update();
+            $usuario = null;
 
-            if ($usuario !== false && $credencial !== false) {
-                new Flash_msg(202)->flashMsg();
-                header('location: /atualizar/myself');
-            } else {
-                new Flash_msg(501)->flashMsg();
-                header('location: /atualizar/myself');
+            if (isset($session->id_tipo_adm)) {
+                $usuario = new Administrador();
+                $usuario->id = $post->id;
+                $usuario->nome = $post->nome;
+                $usuario->matricula = $post->matricula;
+            } elseif (!isset($session->id_tipo_adm)) {
+                $usuario = new Aluno();
+                $usuario->id = $post->id;
+                $usuario->data_nascimento = $post->data_nascimento;
+                $usuario->id_serie = $post->id_serie;
+                $usuario->nome = $post->nome;
+                $usuario->matricula = $post->matricula;
             }
-        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($session->id_tipo_adm)) {
-            var_dump($_POST);
-            $post = (object)$_POST;
-            $usuario = new Aluno();
-            $usuario->id = $post->id;
-            $usuario->data_nascimento = $post->data_nascimento;
-            $usuario->id_serie = $post->id_serie;
-            $usuario->nome = $post->nome;
-            $usuario->matricula = $post->matricula;
-            $usuario = $usuario->update();
 
+            ///
             $credencial = new Credenciais();
             $credencial->id = $post->id_credencial;
             $credencial->usuario = $post->usuario;
             $credencial->senha = $post->senha;
-            $credencial = $credencial->update();
-            
-            if($credencial !== false && $credencial !== false){
-                new Flash_msg(202,"Usuario $post->nome Atualizado!")->flashMsg();
+            ///
+
+            $foto_update = null;
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+
+                try {
+
+                    $foto_update = self::adicionarFoto($_FILES['foto'], BASE_DIR . 'view/img/upload/perfil_usuario', $post->id_credencial, 'perfil');
+                } catch (Throwable $e) {
+                    new Flash_msg(0, $e->getMessage())->flashMsg();
+                    header('location: /atualizar/myself');
+                    exit;
+                }
+            }
+
+            $array = [
+                'usuario' => $usuario,
+                'credencial' => $credencial,
+                'foto_update' => $foto_update
+            ];
+
+            $consulta = null;
+
+            if (isset($session->id_tipo_adm)) {
+                $consulta =  new Administrador();
+                $consulta->array = $array;
+            } elseif (!isset($session->id_tipo_adm)) {
+                $consulta =  new Aluno();
+                $consulta->array = $array;
+            }
+
+            if ($consulta->atualizarDados()) {
+
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']));
+                }
+                self::atualizarSession();
+                new Flash_msg(202)->flashMsg();
                 header('location: /atualizar/myself');
                 exit;
-            }else{
+            } else {
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $foto_update))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $foto_update));
+                }
                 new Flash_msg(501)->flashMsg();
                 header('location: /atualizar/myself');
                 exit;
             }
-
         }
     }
 
@@ -196,33 +222,67 @@ abstract class UsuarioController extends Controller
                 "aluno" => $aluno,
                 "credenciais" => $credencial
             ];
+
             new View("Editar Aluno!", View::$nav_footer, View::$formEdit . "edit_aluno.php", $model)->renderizar();
         } elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            var_dump($_POST);
-            echo ("<br><br>");
             $post = (object)$_POST;
-            $obj =  new Aluno();
-            $obj->id = $post->id;
-            $obj->nome = $post->nome;
-            $obj->matricula = $post->matricula;
-            $obj->data_nascimento = $post->data_nascimento;
-            $obj->id_serie = $post->id_serie;
+
+            $usuario = null;
 
 
+            $usuario = new Aluno();
+            $usuario->id = $post->id;
+            $usuario->data_nascimento = $post->data_nascimento;
+            $usuario->id_serie = $post->id_serie;
+            $usuario->nome = $post->nome;
+            $usuario->matricula = $post->matricula;
 
-            $obj_ = new Credenciais();
-            $obj_->usuario = $post->usuario;
-            $obj_->senha = $post->senha;
-            $obj_->id = $post->id_credencial;
+
+            $credencial = new Credenciais();
+            $credencial->id = $post->id_credencial;
+            $credencial->usuario = $post->usuario;
+            $credencial->senha = $post->senha;
 
 
-            if ($obj->update() && $obj_->update()) {
+            $foto_update = null;
+
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+
+                try {
+
+                    $foto_update = self::adicionarFoto($_FILES['foto'], BASE_DIR . 'view/img/upload/perfil_usuario', $post->id_credencial, 'perfil');
+                } catch (Throwable $e) {
+                    new Flash_msg(0, $e->getMessage())->flashMsg();
+                    header('location: /atualizar/aluno&id='.$usuario->id);
+                    exit;
+                }
+            }
+
+            $array = [
+                'usuario' => $usuario,
+                'credencial' => $credencial,
+                'foto_update' => $foto_update
+            ];
+
+            $consulta =  new Aluno();
+            $consulta->array = $array;
+
+            if ($consulta->atualizarDados()) {
+
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']));
+                }
+                self::atualizarSession();
                 new Flash_msg(202)->flashMsg();
-                header("location: /painel/usuarios");
+                header('location: /painel/usuarios');
                 exit;
             } else {
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $foto_update))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $foto_update));
+                }
                 new Flash_msg(501)->flashMsg();
-                header("location: /painel/usuarios");
+                header('location: /painel/usuarios');
                 exit;
             }
         }
@@ -239,26 +299,56 @@ abstract class UsuarioController extends Controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $post = (object)$_POST;
+         
             $usuario = new Administrador();
             $usuario->id = $post->id;
             $usuario->nome = $post->nome;
             $usuario->matricula = $post->matricula;
-            $consulta = $usuario->update();
-            if ($consulta) {
-                echo ("Sucesso ao atualizar o adm!");
-            } else {
-                echo ("falha ao atualizar o adm");
-            }
 
             $credencial = new Credenciais();
             $credencial->id = $post->id_credenciais;
             $credencial->usuario = $post->usuario;
             $credencial->senha = $post->senha;
-            $consulta = $credencial->update();
-            if ($consulta) {
-                echo ("<h1>Sucesso ao atualizar credencial</h1>");
+
+            $foto_update = null;
+
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+                try {
+
+                    $foto_update = self::adicionarFoto($_FILES['foto'], BASE_DIR . 'view/img/upload/perfil_usuario', $post->id_credenciais, 'perfil');
+                } catch (Throwable $e) {
+                    new Flash_msg(0, $e->getMessage())->flashMsg();
+                    header('location: /atualizar/usuario/administrador?id='.$usuario->id);
+                    exit;
+                }
+            }
+
+            $array = [
+                'usuario' => $usuario,
+                'credencial' => $credencial,
+                'foto_update' => $foto_update
+            ];
+
+            $consulta =  new Administrador();
+            $consulta->array = $array;
+
+            if ($consulta->atualizarDados()) {
+
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $_SESSION['foto']));
+                }
+                self::atualizarSession();
+                new Flash_msg(202)->flashMsg();
+                header('location: /atualizar/usuario/administrador?id=' . $usuario->id);
+                exit;
             } else {
-                echo ("<h1>falha ao atualizar credencial</h1>");
+                if ($foto_update !== null && file_exists(preg_replace('~/+~', '/', BASE_DIR . $foto_update))) {
+                    unlink(preg_replace('~/+~', '/', BASE_DIR . $foto_update));
+                }
+                new Flash_msg(501)->flashMsg();
+                header('location: /atualizar/usuario/administrador?id=' . $usuario->id);
+                exit;
             }
         } elseif ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
             $consulta = new Administrador();
@@ -287,13 +377,25 @@ abstract class UsuarioController extends Controller
 
             new View("Acesso usuarios do sistema!", View::$nav_footer, View::$dinamicoPaineis . "painel_acesso_usuario.php", $model)->renderizar();
         } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
-        echo("<h1>POST HERE!</h1>");
-        $post = (object)$_POST;
-        var_dump($post);
-        $credencial = new Credenciais();
-        $credencial->id = $post->id_credencial;
-        // preciso mudar o DAO para ele permitir a liberação ou o bloqueio...
-        
+            $post = (object)$_POST;
+            var_dump($post);
+            $credencial = new Credenciais();
+            $credencial->id = $post->id_credenciais;
+            $credencial->ativo = $post->ativo;
+
+            if ($credencial->acesso()) {
+                new Flash_msg(207)->flashMsg();
+                header('location: /painel/acesso/usuario');
+                exit;
+            } else {
+                new Flash_msg(501, 'Tente novamente!')->flashMsg();
+                header('location: /painel/acesso/usuario');
+            }
         }
+    }
+
+    public static function excluir(){
+        // esta função ira remover a credencial e o seu respectivo tipo de usuario aluno ou adm do banco.
+        // a ser implementado!.
     }
 }

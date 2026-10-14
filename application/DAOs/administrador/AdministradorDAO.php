@@ -31,6 +31,8 @@ class AdministradorDAO extends DAO
         $stmt->bindValue(2, $model->matricula);
         $stmt->bindValue(3, $model->id);
         return ($stmt->execute()) ? $this->get($model->id) : false;
+
+        
     }
     public function delete(int $id): bool
     {
