@@ -11,7 +11,7 @@ final class Aluno
     public ?string $foto = null;
     public string $nome;
 
-    public string $matricula;
+    public ?string $matricula;
     public string $data_nascimento;
     public string $id_serie;
     public ?int $id_credenciais = null;

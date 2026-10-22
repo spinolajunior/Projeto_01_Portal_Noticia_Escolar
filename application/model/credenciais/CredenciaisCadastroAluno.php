@@ -9,10 +9,10 @@ final class CredenciaisCadastroAluno
 public string $usuario;
 public string $senha;
 public string $nome;
-public string $matricula;
+public ?string $matricula = null;
 public string $data_nascimento;
 public int $id_serie; 
-    public function __construct(string $usuario, string $senha, string $nome, string $matricula, string $data_nascimento, int $id_serie)
+    public function __construct(string $usuario, string $senha, string $nome, ?string $matricula, string $data_nascimento, int $id_serie)
     {
         $this->usuario = $usuario;
         $this->senha = $senha;

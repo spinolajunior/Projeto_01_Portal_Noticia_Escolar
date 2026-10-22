@@ -434,12 +434,12 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                 <a href="/" class="portal-brand">
                     <img
                         src="/view/img/logo_estado_da_bahia.png"
-                        alt="Logo do Colégio Estadual Doutor Aristides Maltez"
+                        alt="Logo do Colégio Estadual de Tempo Integral Doutor Aristides Maltez"
                         class="portal-logo">
 
                     <div class="portal-brand-info">
                         <h1 class="portal-title text-uppercase">
-                            Colégio Estadual Doutor Aristides Maltez
+                            Colégio Estadual de Tempo Integral Doutor Aristides Maltez
                         </h1>
 
                         <small class="portal-subtitle text-uppercase">

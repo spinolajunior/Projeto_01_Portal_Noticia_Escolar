@@ -161,7 +161,7 @@ abstract class UsuarioController extends Controller
         } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
 
             $post = (object)$_POST;
-
+          
             if ((int)$post->tipo_usuario != 0) {
 
                 $novo_adm = new CredenciaisCadastroAdministrador($post->usuario, $post->senha, $post->nome, $post->matricula, (int)$post->tipo_usuario);

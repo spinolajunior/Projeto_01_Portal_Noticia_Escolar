@@ -71,23 +71,22 @@ class CredenciaisDAO extends DAO
     }
     public function logar(Credenciais $credencial): bool|Credenciais
     {
-        try{
-        $query = "SELECT * FROM credenciais WHERE usuario = ? AND Senha = sha2(?,256)  ";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $credencial->usuario);
-        $stmt->bindValue(2, $credencial->senha);
-        $stmt->execute();
-        $obj = $stmt->fetchObject(Credenciais::class);
-        if ($obj !== false) {
-            $this->updateLastLogin($obj->id);
+        try {
+            $query = "SELECT * FROM credenciais WHERE usuario = ? AND Senha = sha2(?,256)  ";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $credencial->usuario);
+            $stmt->bindValue(2, $credencial->senha);
             $stmt->execute();
             $obj = $stmt->fetchObject(Credenciais::class);
-            return $obj;
-        } else {
-            return false;
-        }
-
-        }catch (Throwable $e){
+            if ($obj !== false) {
+                $this->updateLastLogin($obj->id);
+                $stmt->execute();
+                $obj = $stmt->fetchObject(Credenciais::class);
+                return $obj;
+            } else {
+                return false;
+            }
+        } catch (Throwable $e) {
             return false;
         }
     }
@@ -96,14 +95,13 @@ class CredenciaisDAO extends DAO
     {
         try {
             $query = "UPDATE credenciais SET  foto = ? where id = ?;";
-            
-            $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1,$obj->foto,PDO::PARAM_STR);
-            $stmt->bindValue(2,$obj->id,PDO::PARAM_INT);
-            return $stmt->execute();
 
-            } catch (Throwable $e) {
-                return false;
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $obj->foto, PDO::PARAM_STR);
+            $stmt->bindValue(2, $obj->id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (Throwable $e) {
+            return false;
         }
     }
 
@@ -203,14 +201,15 @@ class CredenciaisDAO extends DAO
         }
     }
 
-    function buscarFotoAutorPubli(int $id) : string|bool{
-        try{
+    function buscarFotoAutorPubli(int $id): string|bool
+    {
+        try {
             $query = "SELECT foto from credenciais where id = ?;";
             $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1,$id,PDO::PARAM_INT);
+            $stmt->bindValue(1, $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchColumn();
-        }catch (Throwable $e){
+        } catch (Throwable $e) {
             return false;
         }
     }

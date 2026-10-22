@@ -213,9 +213,11 @@ abstract class NoticiaController extends Controller
     public static function painelNoticia()
     {
         LoginController::logadoRedirect("/painel/noticia");
+        LoginController::verificarAcesso((object)$_SESSION,1);
+        
         $consulta = new Noticia()->noticia_autor_all();
         $model = [
-            "noticias" => array_reverse($consulta)
+            "noticias" => $consulta
         ];
         new View("Painel Gerenciamento Notícia!", View::$nav_footer, View::$dinamicoPaineis . "painel_noticia.php", $model)->renderizar();
     }

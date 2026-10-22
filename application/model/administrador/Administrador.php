@@ -11,7 +11,7 @@ final class Administrador
 
     public ?string $foto = null;
     public string $nome;
-    public string $matricula;
+    public ?string $matricula;
     public ?int $id_credenciais = null;
     public ?int $id_tipo_adm = null;
     public ?int $ativo = null;

@@ -73,21 +73,19 @@ class NoticiaDAO extends DAO
     }
     public function get(int $id): Noticia|bool
     {
-        try{
+        try {
 
-        
-        $query = "SELECT * FROM noticia WHERE id = ?;";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindValue(1, $id);
-        $stmt->execute();
-         $model = $stmt->fetchObject(Noticia::class);
 
-        return $model;
+            $query = "SELECT * FROM noticia WHERE id = ?;";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(1, $id);
+            $stmt->execute();
+            $model = $stmt->fetchObject(Noticia::class);
 
-        }catch (Throwable $e){
+            return $model;
+        } catch (Throwable $e) {
             return false;
         }
-
     }
     public function getAll(): array
     {
@@ -117,31 +115,45 @@ class NoticiaDAO extends DAO
 
     public function noticia_autor_all(): array|bool
     {
-        try {
+        if (isset($_SESSION['acesso']) && isset($_SESSION['id_usuario'])) {
 
+            $acesso_usuario = (int)$_SESSION['acesso'];
+            $id_usuario = (int)$_SESSION['id_usuario'];
 
-            $this->pdo->beginTransaction();
-            $query1 = "SELECT noticia.*, administrador.nome as nome_autor
-                  FROM noticia
-                  INNER JOIN administrador ON noticia.id_administrador = administrador.id;";
+            try {
 
-            $query2 = "SELECT noticia.*, aluno.nome as nome_autor
-                  FROM noticia
-                  INNER JOIN aluno ON noticia.id_aluno_adm = aluno.id;";
+                $query1 = "SELECT noticia.*, administrador.nome AS nome_autor
+           FROM noticia
+           INNER JOIN administrador ON administrador.id = noticia.id_administrador
+           INNER JOIN tipo_adm ON tipo_adm.id = administrador.id_tipo_adm
+           WHERE tipo_adm.nivel_acesso < ?
+              OR administrador.id = ?
+           ORDER BY noticia.data_pub DESC;";
 
-            $consulta = $this->pdo->prepare($query1);
-            $consulta->execute();
+                $query2 = "SELECT noticia.*, aluno.nome AS nome_autor
+                       FROM noticia
+                       INNER JOIN aluno ON aluno.id = noticia.id_aluno_adm
+                       ORDER BY noticia.data_pub DESC;";
 
-            $consulta1 = $consulta->fetchAll(PDO::FETCH_CLASS, Noticia::class);
-
-            $consulta = $this->pdo->prepare($query2);
-            $consulta->execute();
-            $consulta2 = $consulta->fetchAll(PDO::FETCH_CLASS, Noticia::class);
-            $this->pdo->commit();
-
-            return array_merge($consulta1, $consulta2);
-        } catch (Throwable $e) {
-            $this->pdo->rollBack();
+                $consulta = $this->pdo->prepare($query1);
+                $consulta->bindValue(1, $acesso_usuario, PDO::PARAM_INT);
+                $consulta->bindValue(2,$id_usuario,PDO::PARAM_INT);
+                if ($consulta->execute()) {
+                    $consulta1 = $consulta->fetchAll(PDO::FETCH_CLASS, Noticia::class);
+                    $consulta = $this->pdo->prepare($query2);
+                    if ($consulta->execute()) {
+                        $consulta2 = $consulta->fetchAll(PDO::FETCH_CLASS, Noticia::class);
+                        return array_merge($consulta1, $consulta2);
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } catch (Throwable $e) {
+                return false;
+            }
+        } else {
             return false;
         }
     }

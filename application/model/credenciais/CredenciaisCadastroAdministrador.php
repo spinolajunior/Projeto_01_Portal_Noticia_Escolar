@@ -9,10 +9,10 @@ final class CredenciaisCadastroAdministrador
     public string $usuario;
     public string $senha;
     public string $nome;
-    public string $matricula;
+    public ?string $matricula = null;
     public string $id_tipo_adm;
 
-    public function __construct(string $usuario, string $senha, string $nome, string $matricula, int $id_tipo_adm)
+    public function __construct(string $usuario, string $senha, string $nome, ?string $matricula, int $id_tipo_adm)
     {
 
         $this->usuario = $usuario;

@@ -25,6 +25,7 @@ final class Noticia
     {
         return new NoticiaDAO()->getAll();
     }
+    
     public function update(): Noticia|bool
     {
         return new NoticiaDAO()->update($this);
