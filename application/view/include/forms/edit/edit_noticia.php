@@ -12,7 +12,7 @@ if ($imagemUrl !== '') {
 }
 ?>
 <main class="container py-4 py-lg-5 flex-grow-1">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .card-editar-noticia {
             border-radius: 14px;
             overflow: hidden
@@ -67,6 +67,7 @@ if ($imagemUrl !== '') {
                 </div>
                 <div class="card-body p-3 p-md-4">
                     <form id="formEditarNoticia" method="POST" action="/atualizar/noticia" enctype="multipart/form-data" novalidate>
+                        <?= \view\View::csrf() ?>
                         <input type="hidden" name="id" value="<?= (int)($noticia->id ?? 0) ?>">
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Imagem da notícia</label>
@@ -90,25 +91,25 @@ if ($imagemUrl !== '') {
                         <hr class="my-4">
                         <div class="mb-4">
                             <label for="titulo" class="form-label fw-semibold">Título da notícia <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="150" value="<?= $esc($noticia->titulo ?? '') ?>" placeholder="Digite o título da notícia" required>
+                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="50" value="<?= $esc($noticia->titulo ?? '') ?>" placeholder="Digite o título da notícia" required>
                             <div id="erroTitulo" class="invalid-feedback"></div>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Entre 5 e 150 caracteres.</small>
-                                <span id="contadorTitulo" class="contador-campo">0/150</span>
+                                <small class="text-muted">Entre 5 e 50 caracteres.</small>
+                                <span id="contadorTitulo" class="contador-campo">0/50</span>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="subtitulo" class="form-label fw-semibold">Subtítulo <span class="text-muted fw-normal">(opcional)</span></label>
-                            <input type="text" class="form-control" id="subtitulo" name="subtitulo" maxlength="255" value="<?= $esc($noticia->subtitulo ?? '') ?>" placeholder="Digite o subtítulo da notícia">
+                            <input type="text" class="form-control" id="subtitulo" name="subtitulo" maxlength="80" value="<?= $esc($noticia->subtitulo ?? '') ?>" placeholder="Digite o subtítulo da notícia">
                             <div id="erroSubtitulo" class="invalid-feedback"></div>
-                            <div class="text-end mt-1"><span id="contadorSubtitulo" class="contador-campo">0/255</span></div>
+                            <div class="text-end mt-1"><span id="contadorSubtitulo" class="contador-campo">0/80</span></div>
                         </div>
                         <div class="mb-4">
                             <label for="descricao" class="form-label fw-semibold">Conteúdo da notícia <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="descricao" name="descricao" rows="9" minlength="30" placeholder="Escreva o conteúdo da notícia" required><?= $esc($noticia->descricao ?? '') ?></textarea>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="9" minlength="1" placeholder="Escreva o conteúdo da notícia" required><?= $esc($noticia->descricao ?? '') ?></textarea>
                             <div id="erroDescricao" class="invalid-feedback"></div>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Mínimo de 30 caracteres.</small>
+                                <small class="text-muted">Mínimo de 1 caracteres.</small>
                                 <span id="contadorDescricao" class="contador-campo">0 caracteres</span>
                             </div>
                         </div>
@@ -134,7 +135,7 @@ if ($imagemUrl !== '') {
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEditarNoticia');
         const titulo = document.getElementById('titulo');
@@ -160,8 +161,8 @@ if ($imagemUrl !== '') {
         let enviando = false;
 
         function atualizarContadores() {
-            document.getElementById('contadorTitulo').textContent = `${titulo.value.length}/150`;
-            document.getElementById('contadorSubtitulo').textContent = `${subtitulo.value.length}/255`;
+            document.getElementById('contadorTitulo').textContent = `${titulo.value.length}/50`;
+            document.getElementById('contadorSubtitulo').textContent = `${subtitulo.value.length}/80`;
             document.getElementById('contadorDescricao').textContent = `${descricao.value.trim().length} caracteres`;
         }
 
@@ -185,16 +186,16 @@ if ($imagemUrl !== '') {
             if (campo === titulo) {
                 if (!valor) mensagem = 'Informe o título da notícia.';
                 else if (valor.length < 5) mensagem = 'O título precisa ter pelo menos 5 caracteres.';
-                else if (valor.length > 150) mensagem = 'O título pode ter no máximo 150 caracteres.';
+                else if (valor.length > 50) mensagem = 'O título pode ter no máximo 50 caracteres.';
             }
 
-            if (campo === subtitulo && valor.length > 255) {
-                mensagem = 'O subtítulo pode ter no máximo 255 caracteres.';
+            if (campo === subtitulo && valor.length > 80) {
+                mensagem = 'O subtítulo pode ter no máximo 80 caracteres.';
             }
 
             if (campo === descricao) {
                 if (!valor) mensagem = 'Informe o conteúdo da notícia.';
-                else if (valor.length < 30) mensagem = 'O conteúdo precisa ter pelo menos 30 caracteres.';
+                else if (valor.length < 1) mensagem = 'O conteúdo precisa ter pelo menos 1 caractere.';
             }
 
             return estadoCampo(campo, mensagem, mostrar);

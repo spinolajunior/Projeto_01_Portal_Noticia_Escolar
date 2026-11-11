@@ -1,6 +1,6 @@
 <?php
 
-namespace controller\tipo_Adm;
+namespace controller\tipo_adm;
 
 use controller\Controller;
 use model\tipo_adm\Tipo_adm;

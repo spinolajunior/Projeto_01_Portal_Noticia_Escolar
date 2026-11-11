@@ -107,7 +107,7 @@ $secoes[] = [
 
 <main class="container-fluid py-3 py-md-4 painel-acesso">
 
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-acesso .painel-cabecalho {
             display: flex;
             align-items: center;
@@ -539,6 +539,7 @@ $secoes[] = [
                                                         class="d-inline-block"
                                                         data-form-acesso
                                                         data-nome="<?= $exibirValor($nome) ?>">
+                                                        <?= \view\View::csrf() ?>
 
                                                         <input type="hidden" name="id_credenciais" value="<?= $usuario["id_credenciais"] ?>">
                                                         <input type="hidden" name="ativo" value="<?= $usuario["ativo"] ?>">
@@ -619,6 +620,7 @@ $secoes[] = [
                                                     action="/painel/acesso/usuario"
                                                     data-form-acesso
                                                     data-nome="<?= $exibirValor($nome) ?>">
+                                                    <?= \view\View::csrf() ?>
 
                                                     <input type="hidden" name="id_credenciais" value="<?= $usuario["id_credenciais"] ?>">
                                                     <input type="hidden" name="ativo" value="<?= $usuario["ativo"] ?>">
@@ -677,7 +679,7 @@ $secoes[] = [
     </div>
 </main>
 
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener("DOMContentLoaded", () => {
         const normalizar = texto => String(texto || "")
             .normalize("NFD")

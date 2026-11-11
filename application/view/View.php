@@ -12,7 +12,7 @@ class View
     public static string $formPost = VIEW."/include/forms/post/";
     public static string $formCreate = VIEW."/include/forms/create/";
     public static string $formEdit = VIEW."/include/forms/edit/";
-    public static string $uploadImagemNoticia = "view/img/upload/";
+    public static string $uploadImagemNoticia = BASE_DIR . "view/img/upload/";
 
 
     public function __construct(
@@ -24,10 +24,16 @@ class View
 
 
 
+    public static function csrf(): string
+    {
+        return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') . '">';
+    }
+
     public function renderizar(): void
     {
         
         $titulo = $this->titulo;
+        $nonce = $GLOBALS['nonce'] ?? '';
 
         ob_start();
 
@@ -41,7 +47,7 @@ class View
         if (file_exists($this->main)) {
             include $this->main;
         } else {
-            echo "<p>Erro: View do conteúdo não encontrada ({$this->main})</p>";
+            throw new \RuntimeException('View de conteúdo não encontrada.');
         }
 
         $content = ob_get_clean();
@@ -50,7 +56,7 @@ class View
 
             include $this->base;
         } else {
-            echo "<p>Erro: View base não encontrada ({$this->base})</p>";
+            throw new \RuntimeException('Template não encontrado.');
         }
     }
 }

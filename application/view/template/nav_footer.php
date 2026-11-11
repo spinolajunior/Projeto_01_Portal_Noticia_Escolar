@@ -13,6 +13,7 @@ if ($nomeUsuario === '') $nomeUsuario = 'Minha conta';
 
 $nivelAcesso = (int)($_SESSION['acesso'] ?? $_SESSION['nivel'] ?? 0);
 $podeGerenciar = $logado && $nivelAcesso >= 1;
+$podeAdministrar = $podeGerenciar && ($_SESSION['tipo_usuario'] ?? '') === 'administrador';
 
 $fotoPadrao = '/view/img/upload/perfil_usuario/user_def.jpg';
 $fotoUsuario = $fotoPadrao;
@@ -54,10 +55,12 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
     <title><?= $esc($titulo ?? 'Portal CETIDAM') ?></title>
 
     <link rel="icon" href="/view/img/logo_estado_da_bahia.png" type="image/png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/assets/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/assets/fonts/poppins/poppins.css" rel="stylesheet">
+    <link href="/assets/portal.css" rel="stylesheet">
 
-    <style>
+    <style nonce="<?= $nonce ?>">
         .portal-header {
             background: linear-gradient(105deg, #0b5ed7, #0d6efd 65%, #1264e5);
             box-shadow: 0 3px 14px rgba(15, 45, 95, .12);
@@ -499,7 +502,7 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                                     src="<?= $esc($fotoUsuario) ?>"
                                     alt="Foto de <?= $esc($nomeUsuario) ?>"
                                     class="portal-user-avatar"
-                                    onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                                    data-foto-padrao>
 
                                 <span class="portal-user-texto">
                                     <?= $esc($nomeUsuario) ?>
@@ -528,14 +531,14 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                                         </a>
                                     </li>
 
-                                    <li>
+                                    <?php if ($podeAdministrar): ?><li>
                                         <a
                                             class="dropdown-item"
                                             href="/painel/gerenciamento">
                                             <i class="bi bi-gear text-primary"></i>
                                             Área Administrativa
                                         </a>
-                                    </li>
+                                    </li><?php endif; ?>
 
                                     <li>
                                         <hr class="dropdown-divider">
@@ -544,12 +547,13 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                                 <?php endif; ?>
 
                                 <li>
-                                    <a
-                                        class="dropdown-item text-danger fw-semibold"
-                                        href="/logout">
+                                    <form method="POST" action="/logout" class="m-0">
+                                        <?= \view\View::csrf() ?>
+<button type="submit" class="dropdown-item text-danger fw-semibold w-100 text-start border-0">
                                         <i class="bi bi-box-arrow-right"></i>
                                         Sair
-                                    </a>
+                                    </button>
+</form>
                                 </li>
                             </ul>
                         </div>
@@ -616,7 +620,7 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                             src="<?= $esc($fotoUsuario) ?>"
                             alt="Foto de perfil de <?= $esc($nomeUsuario) ?>"
                             class="user-avatar-mobile"
-                            onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                            data-foto-padrao>
 
                         <div class="flex-grow-1 portal-mobile-nome">
                             <div class="fw-bold text-dark">
@@ -724,7 +728,7 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                             </a>
                         </li>
 
-                        <li class="nav-item">
+                        <?php if ($podeAdministrar): ?><li class="nav-item">
                             <a
                                 class="nav-link"
                                 href="/painel/gerenciamento">
@@ -732,7 +736,7 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                                 <i class="bi bi-gear"></i>
                                 Área Administrativa
                             </a>
-                        </li>
+                        </li><?php endif; ?>
 
                     <?php endif; ?>
 
@@ -745,13 +749,14 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
                 <?php if ($logado): ?>
 
-                    <a
-                        href="/logout"
-                        class="btn btn-outline-danger w-100 fw-semibold d-flex justify-content-center align-items-center gap-2">
+                    <form method="POST" action="/logout" class="m-0">
+                        <?= \view\View::csrf() ?>
+<button type="submit" class="btn btn-outline-danger w-100 fw-semibold d-flex justify-content-center align-items-center gap-2 text-start border-0">
 
                         <i class="bi bi-box-arrow-right"></i>
                         Sair da conta
-                    </a>
+                    </button>
+</form>
 
                 <?php else: ?>
 
@@ -780,29 +785,36 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
             <div
                 id="flashMsg"
                 class="alert alert-<?= $esc($flashTipo) ?> alert-dismissible fade show shadow-sm d-flex align-items-start gap-2 flash-alert"
+                data-auto-fechar="<?= $flashTipo === 'success' ? 'true' : 'false' ?>"
                 role="alert">
 
                 <?php if ($flashTipo === 'success'): ?>
 
                     <i
-                        class="bi bi-check-circle-fill flex-shrink-0"
+                        class="bi bi-check-circle-fill flex-shrink-0 portal-flash-symbol"
                         aria-hidden="true"></i>
 
                 <?php elseif ($flashTipo === 'warning'): ?>
 
                     <i
-                        class="bi bi-exclamation-triangle-fill flex-shrink-0"
+                        class="bi bi-exclamation-triangle-fill flex-shrink-0 portal-flash-symbol"
                         aria-hidden="true"></i>
 
                 <?php else: ?>
 
                     <i
-                        class="bi bi-x-circle-fill flex-shrink-0"
+                        class="bi <?= $flashTipo === 'danger' ? 'bi-exclamation-circle-fill' : 'bi-info-circle-fill' ?> flex-shrink-0 portal-flash-symbol"
                         aria-hidden="true"></i>
 
                 <?php endif; ?>
 
                 <span class="flex-grow-1 flash-message">
+                    <strong class="d-block mb-1"><?= $esc(match ($flashTipo) {
+                        'success' => 'Pronto! Tudo certo.',
+                        'danger' => 'Precisamos da sua atenção',
+                        'warning' => 'Confira esta informação',
+                        default => 'Uma informação para você',
+                    }) ?></strong>
                     <?= $esc($flash['msg'] ?? '') ?>
                 </span>
 
@@ -833,10 +845,33 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/bootstrap/bootstrap.bundle.min.js"></script>
 
-    <script>
+    <script nonce="<?= $nonce ?>">
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-voltar]').forEach(link => {
+                link.addEventListener('click', event => {
+                    if (window.history.length > 1) {
+                        event.preventDefault();
+                        window.history.back();
+                    }
+                });
+            });
+            document.querySelectorAll('img[data-foto-padrao], img[data-imagem-ocultar], img[data-imagem-placeholder]').forEach(img => {
+                const falhou = () => {
+                    if (img.hasAttribute('data-foto-padrao')) {
+                        img.removeAttribute('data-foto-padrao');
+                        img.src = '/view/img/upload/perfil_usuario/user_def.jpg';
+                    } else if (img.hasAttribute('data-imagem-placeholder')) {
+                        img.classList.add('d-none');
+                        img.nextElementSibling?.classList.remove('d-none');
+                    } else {
+                        img.style.visibility = 'hidden';
+                    }
+                };
+                img.addEventListener('error', falhou, {once: true});
+                if (img.complete && img.naturalWidth === 0) falhou();
+            });
             const flash = document.getElementById('flashMsg');
 
             if (flash) {
@@ -844,11 +879,13 @@ $caminhoAtual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                     document.getElementById('flashContainer')?.remove();
                 });
 
-                setTimeout(() => {
-                    if (flash.isConnected) {
-                        bootstrap.Alert.getOrCreateInstance(flash).close();
-                    }
-                }, 4000);
+                if (flash.dataset.autoFechar === 'true') {
+                    setTimeout(() => {
+                        if (flash.isConnected) {
+                            bootstrap.Alert.getOrCreateInstance(flash).close();
+                        }
+                    }, 4000);
+                }
             }
         });
     </script>

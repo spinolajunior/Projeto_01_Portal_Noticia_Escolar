@@ -13,6 +13,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
                 </div>
                 <div class="card-body p-3 p-md-4 p-lg-5">
                     <form id="formEditarEvento" method="POST" action="/atualizar/evento" novalidate>
+                        <?= \view\View::csrf() ?>
                         <input type="hidden" name="id" value="<?= (int)$evento->id ?>">
                         <div class="mb-4">
                             <label for="titulo" class="form-label fw-semibold">Título do Evento <span class="text-danger">*</span></label>
@@ -40,7 +41,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEditarEvento');
         const titulo = document.getElementById('titulo');
@@ -49,7 +50,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
         const erroData = document.getElementById('erroData');
         const contador = document.getElementById('contadorTitulo');
         const btnSalvar = document.getElementById('btnSalvar');
-        const dataOriginal = dataEvento.dataset.original;
+
         let enviando = false;
 
         function hoje() {
@@ -108,7 +109,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
                     data.getDate() !== dia
                 ) {
                     mensagem = 'A data informada não existe.';
-                } else if (valor !== dataOriginal && valor < hoje()) {
+                } else if (valor < hoje()) {
                     mensagem = 'A nova data não pode ser anterior à data atual.';
                 }
             }

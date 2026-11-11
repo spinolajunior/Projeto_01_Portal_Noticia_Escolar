@@ -1,0 +1,8 @@
+Require all granted
+Options -Indexes -MultiViews
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^(?:assets/|view/img/)[a-zA-Z0-9_./-]+\.(?:css|js|jpg|jpeg|png|webp|woff2?)$ - [END]
+RewriteRule ^index\.php$ - [END]
+RewriteRule ^ index.php [END,QSA]

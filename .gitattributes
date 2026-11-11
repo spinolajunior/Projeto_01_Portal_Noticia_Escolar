@@ -1,0 +1,7 @@
+# Preserva os bytes dos assets e seus hashes ao alternar Windows/Linux.
+application/assets/** -text
+application/assets/manifest.json text eol=lf
+application/assets/portal.css text eol=lf
+application/assets/fonts/poppins/poppins.css text eol=lf
+# Mantém a licença oficial da fonte, inclusive seus espaços originais.
+application/assets/fonts/poppins/OFL.txt -whitespace

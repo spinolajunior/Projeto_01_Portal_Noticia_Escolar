@@ -1,0 +1,2 @@
+# O DocumentRoot deve apontar para application/. Protege a raiz do projeto.
+Require all denied

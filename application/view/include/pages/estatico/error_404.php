@@ -5,7 +5,7 @@
 
         <div class="w-100 mx-auto" style="max-width: 800px;">
             <img 
-                src="view/img/error_404.png"
+                src="/view/img/error_404.png"
                 alt="Erro 404 - Página não encontrada"
                 class="img-fluid w-100 mb-4"
             >

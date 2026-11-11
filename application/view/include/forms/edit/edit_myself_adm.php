@@ -13,7 +13,7 @@ $foto = $nomeFoto !== '' && is_file($caminhoFisico) && is_readable($caminhoFisic
 $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
 <main class="container py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .edicao-container {
             max-width: 950px;
             margin: auto
@@ -124,12 +124,13 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
             </div>
             <div class="edicao-body">
                 <form method="POST" enctype="multipart/form-data" id="formEditarAdministrador" novalidate>
+                    <?= \view\View::csrf() ?>
                     <input type="hidden" name="id" value="<?= (int)($administrador->id ?? 0) ?>">
                     <input type="hidden" name="id_credencial" value="<?= (int)($credenciais->id ?? 0) ?>">
                     <h2 class="secao-titulo"><i class="bi bi-image me-2 text-primary"></i>Foto do perfil</h2>
                     <div class="foto-perfil-container mb-4">
                         <div class="foto-preview-container">
-                            <img src="<?= $esc($foto) ?>" id="previewFoto" class="foto-preview" alt="Foto atual do administrador" onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                            <img src="<?= $esc($foto) ?>" id="previewFoto" class="foto-preview" alt="Foto atual do administrador" data-foto-padrao>
                         </div>
                         <div class="foto-campos">
                             <label for="foto" class="form-label fw-semibold">Alterar foto <span class="text-muted fw-normal">(opcional)</span></label>
@@ -145,7 +146,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
                     <div class="row g-3 mb-4">
                         <div class="col-12 col-md-7">
                             <label for="nome" class="form-label fw-semibold">Nome completo <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="nome" name="nome" value="<?= $esc($administrador->nome ?? '') ?>" minlength="3" maxlength="150" placeholder="Digite o nome completo" autocomplete="name" required>
+                            <input type="text" class="form-control" id="nome" name="nome" value="<?= $esc($administrador->nome ?? '') ?>" minlength="3" maxlength="100" placeholder="Digite o nome completo" autocomplete="name" required>
                             <div class="invalid-feedback" id="erroNome"></div>
                             <div class="form-text">Apenas letras, acentos e espaços.</div>
                         </div>
@@ -160,7 +161,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
                     <div class="row g-3 mb-4">
                         <div class="col-12">
                             <label for="usuario" class="form-label fw-semibold">Nome de usuário <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="usuario" name="usuario" value="<?= $esc($credenciais->usuario ?? '') ?>" minlength="3" maxlength="100" autocomplete="username" placeholder="Digite o nome de usuário" required>
+                            <input type="text" class="form-control" id="usuario" name="usuario" value="<?= $esc($credenciais->usuario ?? '') ?>" minlength="3" maxlength="100" autocomplete="username" placeholder="Digite o nome de usuário">
                             <div class="invalid-feedback" id="erroUsuario"></div>
                             <div class="form-text">Entre 3 e 100 caracteres, apenas letras e números, sem espaços.</div>
                         </div>
@@ -191,7 +192,7 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEditarAdministrador');
         const campos = {
@@ -252,17 +253,16 @@ $esc = fn($valor): string => htmlspecialchars((string)($valor ?? ''), ENT_QUOTES
                 case 'nome':
                     if (!valor) mensagem = 'Informe o nome completo.';
                     else if (valor.length < 3) mensagem = 'O nome precisa ter pelo menos 3 caracteres.';
-                    else if (valor.length > 150) mensagem = 'O nome pode ter no máximo 150 caracteres.';
+                    else if (valor.length > 100) mensagem = 'O nome pode ter no máximo 100 caracteres.';
                     else if (!/^[\p{L}\p{M} ]+$/u.test(valor)) mensagem = 'Utilize apenas letras, acentos e espaços.';
                     break;
                 case 'matricula':
                     if (valor && !/^[0-9]+$/.test(valor)) mensagem = 'A matrícula deve conter apenas números.';
                     break;
                 case 'usuario':
-                    if (!valor) mensagem = 'Informe o nome de usuário.';
-                    else if (valor.length < 3) mensagem = 'O usuário precisa ter pelo menos 3 caracteres.';
+                    if (valor && valor.length < 3) mensagem = 'O usuário precisa ter pelo menos 3 caracteres.';
                     else if (valor.length > 100) mensagem = 'O usuário pode ter no máximo 100 caracteres.';
-                    else if (!/^[a-zA-Z0-9]+$/.test(valor)) mensagem = 'Utilize apenas letras e números, sem espaços.';
+                    else if (valor && !/^[a-zA-Z0-9]+$/.test(valor)) mensagem = 'Utilize apenas letras e números, sem espaços.';
                     break;
                 case 'senha':
                     if (campo.value !== '' || campos.confirmar_senha.value !== '') {

@@ -16,7 +16,7 @@ $foto = $nomeFoto !== '' && is_file($caminhoFoto) && is_readable($caminhoFoto)
 $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
 ?>
 <main class="container py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .edicao-container {
             max-width: 950px;
             margin: auto
@@ -128,12 +128,13 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
             </div>
             <div class="edicao-body">
                 <form id="formEditarAluno" method="POST" enctype="multipart/form-data" novalidate>
+                    <?= \view\View::csrf() ?>
                     <input type="hidden" name="id" value="<?= (int)($_SESSION['id_usuario'] ?? $aluno->id ?? 0) ?>">
                     <input type="hidden" name="id_credencial" value="<?= (int)($_SESSION['id_credencial'] ?? 0) ?>">
                     <h2 class="secao-titulo"><i class="bi bi-image me-2 text-primary"></i>Minha foto</h2>
                     <div class="foto-perfil-container mb-4">
                         <div class="foto-preview-container">
-                            <img src="<?= $esc($foto) ?>" id="previewFoto" class="foto-preview" alt="Minha foto de perfil" onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                            <img src="<?= $esc($foto) ?>" id="previewFoto" class="foto-preview" alt="Minha foto de perfil" data-foto-padrao>
                         </div>
                         <div class="foto-campos">
                             <label for="foto" class="form-label fw-semibold">Alterar foto <span class="text-muted fw-normal">(opcional)</span></label>
@@ -148,13 +149,13 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
                     <div class="row g-3 mb-4">
                         <div class="col-12 col-md-7">
                             <label for="nome" class="form-label fw-semibold">Nome completo <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="nome" name="nome" value="<?= $esc($aluno->nome ?? '') ?>" minlength="3" maxlength="150" autocomplete="name" placeholder="Digite seu nome completo" required>
+                            <input type="text" class="form-control" id="nome" name="nome" value="<?= $esc($aluno->nome ?? '') ?>" minlength="3" maxlength="100" autocomplete="name" placeholder="Digite seu nome completo" required>
                             <div class="invalid-feedback" id="erroNome"></div>
                             <div class="form-text">Apenas letras, acentos e espaços.</div>
                         </div>
                         <div class="col-12 col-md-5">
-                            <label for="matricula" class="form-label fw-semibold">Matrícula <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="matricula" name="matricula" value="<?= $esc($aluno->matricula ?? '') ?>" inputmode="numeric" placeholder="Sua matrícula" required>
+                            <label for="matricula" class="form-label fw-semibold">Matrícula <span class="text-muted fw-normal">(opcional)</span></label>
+                            <input type="text" class="form-control" id="matricula" name="matricula" value="<?= $esc($aluno->matricula ?? '') ?>" inputmode="numeric" placeholder="Sua matrícula">
                             <div class="invalid-feedback" id="erroMatricula"></div>
                             <div class="form-text">Apenas números.</div>
                         </div>
@@ -182,7 +183,7 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
                     <div class="row g-3 mb-4">
                         <div class="col-12">
                             <label for="usuario" class="form-label fw-semibold">Nome de usuário <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="usuario" name="usuario" value="<?= $esc($credenciais->usuario ?? '') ?>" minlength="3" maxlength="100" autocomplete="username" placeholder="Digite seu nome de usuário" required>
+                            <input type="text" class="form-control" id="usuario" name="usuario" value="<?= $esc($credenciais->usuario ?? '') ?>" minlength="3" maxlength="100" autocomplete="username" placeholder="Digite seu nome de usuário">
                             <div class="invalid-feedback" id="erroUsuario"></div>
                             <div class="form-text">Entre 3 e 100 caracteres, apenas letras e números, sem espaços.</div>
                         </div>
@@ -213,7 +214,7 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEditarAluno');
         const campos = {
@@ -288,13 +289,13 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
                 case 'nome':
                     if (!valor) mensagem = 'Informe seu nome completo.';
                     else if (valor.length < 3) mensagem = 'O nome precisa ter pelo menos 3 caracteres.';
-                    else if (valor.length > 150) mensagem = 'O nome pode ter no máximo 150 caracteres.';
+                    else if (valor.length > 100) mensagem = 'O nome pode ter no máximo 100 caracteres.';
                     else if (!/^[\p{L}\p{M} ]+$/u.test(valor)) mensagem = 'Utilize apenas letras, acentos e espaços.';
                     break;
 
                 case 'matricula':
                     if (!valor) mensagem = 'Informe sua matrícula.';
-                    else if (!/^[0-9]+$/.test(valor)) mensagem = 'A matrícula deve conter apenas números.';
+                    else if (valor && !/^[0-9]+$/.test(valor)) mensagem = 'A matrícula deve conter apenas números.';
                     break;
 
                 case 'data_nascimento':
@@ -327,7 +328,7 @@ $dataNascimento = substr((string)($aluno->data_nascimento ?? ''), 0, 10);
                     if (!valor) mensagem = 'Informe seu nome de usuário.';
                     else if (valor.length < 3) mensagem = 'O usuário precisa ter pelo menos 3 caracteres.';
                     else if (valor.length > 100) mensagem = 'O usuário pode ter no máximo 100 caracteres.';
-                    else if (!/^[a-zA-Z0-9]+$/.test(valor)) mensagem = 'Utilize apenas letras e números, sem espaços.';
+                    else if (valor && !/^[a-zA-Z0-9]+$/.test(valor)) mensagem = 'Utilize apenas letras e números, sem espaços.';
                     break;
 
                 case 'senha':

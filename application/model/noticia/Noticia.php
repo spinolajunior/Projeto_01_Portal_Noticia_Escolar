@@ -1,6 +1,6 @@
 <?php
 
-namespace model\Noticia;
+namespace model\noticia;
 
 use DAOs\noticia\NoticiaDAO;
 
@@ -8,11 +8,11 @@ final class Noticia
 {
     public ?int $id = null;
     public string $titulo;
-    public string $subtitulo;
+    public ?string $subtitulo = null;
     public string $descricao;
-    public ?string $imagem;
+    public ?string $imagem = null;
     public string $data_pub;
-    public bool $status;
+    public ?bool $status = null;
     public ?int $id_administrador = null;
     public ?int $id_aluno_adm = null;
     public ?string $nome_autor = null;

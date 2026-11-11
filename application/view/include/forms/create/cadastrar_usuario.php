@@ -5,7 +5,7 @@ $acesso = (int)($_SESSION['acesso'] ?? 0);
 $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
 <main class="container py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .cadastro-container {
             max-width: 950px;
             margin: auto
@@ -90,11 +90,12 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
             </div>
             <div class="cadastro-body">
                 <form id="formCadastroUsuario" method="POST" action="" novalidate>
+                    <?= \view\View::csrf() ?>
                     <h2 class="secao-titulo"><i class="bi bi-person-vcard me-2 text-primary"></i>Dados pessoais</h2>
                     <div class="row g-3 mb-4">
                         <div class="col-12 col-md-7">
                             <label for="nome" class="form-label fw-semibold">Nome completo <span class="campo-obrigatorio">*</span></label>
-                            <input type="text" class="form-control" id="nome" name="nome" minlength="3" maxlength="150" placeholder="Digite o nome completo" autocomplete="name" required>
+                            <input type="text" class="form-control" id="nome" name="nome" minlength="3" maxlength="100" placeholder="Digite o nome completo" autocomplete="name" required>
                             <div class="invalid-feedback" id="erroNome"></div>
                             <div class="form-text">Apenas letras, acentos e espaços.</div>
                         </div>
@@ -136,15 +137,10 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
                         <label for="tipo_usuario" class="form-label fw-semibold">Selecione o tipo de usuário <span class="campo-obrigatorio">*</span></label>
                         <select class="form-select" id="tipo_usuario" name="tipo_usuario" required>
                             <option value="" selected disabled>Selecione uma opção</option>
-                            <?php if ($acesso >= 1): ?>
-                                <option value="0">Aluno</option>
-                            <?php endif; ?>
-                            <?php if ($acesso >= 2): ?>
-                                <option value="1">Professor</option>
-                            <?php endif; ?>
-                            <?php if ($acesso >= 3): ?>
-                                <option value="2">Administração</option>
-                            <?php endif; ?>
+                            <option value="0">Aluno</option>
+                            <?php foreach ($model['tipos'] as $tipo): ?>
+                                <option value="<?= (int)$tipo->id ?>"><?= $esc($tipo->cargo) ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <div class="invalid-feedback" id="erroTipo"></div>
                     </div>
@@ -188,7 +184,7 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formCadastroUsuario');
         const campos = {
@@ -240,14 +236,14 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
             campos.id_serie.disabled = !aluno;
             campos.data_nascimento.required = aluno;
             campos.id_serie.required = aluno;
-            campos.matricula.required = aluno;
+            campos.matricula.required = false;
 
-            document.getElementById('matriculaObrigatoria').hidden = !aluno;
+            document.getElementById('matriculaObrigatoria').hidden = true;
             document.getElementById('matriculaInfo').textContent = aluno ?
                 'A matrícula é obrigatória e aceita apenas números.' :
                 administrador ?
                 'Opcional. Caso informada, utilize apenas números.' :
-                'Apenas números.';
+                'Opcional. Apenas números.';
 
             campos.matricula.placeholder = aluno ?
                 'Informe a matrícula do aluno' :
@@ -300,14 +296,12 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
                 case 'nome':
                     if (!valor) mensagem = 'Informe o nome completo.';
                     else if (valor.length < 3) mensagem = 'O nome precisa ter pelo menos 3 caracteres.';
-                    else if (valor.length > 150) mensagem = 'O nome pode ter no máximo 150 caracteres.';
+                    else if (valor.length > 100) mensagem = 'O nome pode ter no máximo 100 caracteres.';
                     else if (!/^[\p{L}\p{M} ]+$/u.test(valor)) mensagem = 'Utilize apenas letras, acentos e espaços.';
                     break;
 
                 case 'matricula':
-                    if (campos.tipo_usuario.value === '0' && !valor) {
-                        mensagem = 'A matrícula é obrigatória para alunos.';
-                    } else if (valor && !/^[0-9]+$/.test(valor)) {
+                    if (valor && !/^[0-9]+$/.test(valor)) {
                         mensagem = 'A matrícula deve conter apenas números.';
                     }
                     break;
@@ -330,7 +324,7 @@ $esc = fn($valor): string => htmlspecialchars((string)$valor, ENT_QUOTES | ENT_S
                     break;
 
                 case 'tipo_usuario':
-                    if (!['0', '1', '2'].includes(campo.value) ||
+                    if (!['0', '1', '2', '3'].includes(campo.value) ||
                         !Array.from(campo.options).some(opcao =>
                             opcao.value === campo.value && !opcao.disabled
                         )) {

@@ -1,6 +1,6 @@
 <main class="container-fluid py-3 py-md-5">
 
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-administrativo {
             max-width: 1320px;
             margin: 0 auto;
@@ -248,7 +248,7 @@
             <a
                 href="/painel/gerenciamento"
                 class="btn btn-outline-secondary"
-                onclick="return voltarPainel(event);">
+                >
                 <i class="bi bi-arrow-left me-1"></i>
                 Voltar
             </a>
@@ -476,16 +476,3 @@
     </div>
 
 </main>
-
-<script>
-    function voltarPainel(event) {
-
-        if (window.history.length > 1) {
-            event.preventDefault();
-            window.history.back();
-            return false;
-        }
-
-        return true;
-    }
-</script>

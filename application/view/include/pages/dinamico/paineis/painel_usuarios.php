@@ -122,7 +122,7 @@ $secoes[] = [
 ?>
 
 <main class="container-fluid py-3 py-md-4 painel-usuarios">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-usuarios .painel-cabecalho {
             display: flex;
             align-items: center;
@@ -495,6 +495,14 @@ $secoes[] = [
                 </div>
             </div>
 
+            <div class="alert alert-warning d-flex align-items-start gap-3 portal-delete-warning" role="note">
+                <i class="bi bi-exclamation-triangle-fill fs-4 flex-shrink-0" aria-hidden="true"></i>
+                <div>
+                    <strong class="d-block mb-1">Atenção ao excluir uma conta</strong>
+                    As notícias, os eventos e os avisos cadastrados por esse usuário também serão apagados.
+                </div>
+            </div>
+
             <?php foreach ($secoes as $secao): ?>
                 <?php
                 $usuarios = $secao["usuarios"];
@@ -614,10 +622,10 @@ $secoes[] = [
 
                                                     <form
                                                         method="POST"
-                                                        action="/usuarios/excluir"
+                                                        action="/excluir/usuario"
                                                         data-form-exclusao
-                                                        data-tipo="<?= $tipo ?>"
                                                         data-nome="<?= $exibirValor($nome) ?>">
+                                                        <?= \view\View::csrf() ?>
 
                                                         <input type="hidden" name="id" value="<?= $id ?>">
                                                         <input type="hidden" name="tipo_usuario" value="<?= $tipo ?>">
@@ -707,10 +715,10 @@ $secoes[] = [
 
                                             <form
                                                 method="POST"
-                                                action="/usuarios/excluir"
+                                                action="/excluir/usuario"
                                                 data-form-exclusao
-                                                data-tipo="<?= $tipo ?>"
                                                 data-nome="<?= $exibirValor($nome) ?>">
+                                                <?= \view\View::csrf() ?>
 
                                                 <input type="hidden" name="id" value="<?= $id ?>">
                                                 <input type="hidden" name="tipo_usuario" value="<?= $tipo ?>">
@@ -751,7 +759,34 @@ $secoes[] = [
     </div>
 </main>
 
-<script>
+<div class="modal fade" id="excluirUsuarioModal" tabindex="-1" aria-labelledby="tituloExcluirUsuario" aria-describedby="descricaoExcluirUsuario" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content portal-delete-content shadow">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Cancelar exclusão"></button>
+            </div>
+            <div class="modal-body text-center px-4 pt-0 pb-4">
+                <div class="portal-feedback-symbol bg-warning-subtle text-warning-emphasis" aria-hidden="true">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <p class="portal-feedback-eyebrow text-danger mb-2">Exclusão permanente</p>
+                <h2 class="h4 mb-3" id="tituloExcluirUsuario">Excluir esta conta e suas publicações?</h2>
+                <p class="text-body-secondary mb-4">Você está prestes a excluir a conta de <strong class="text-body portal-delete-name" id="nomeExcluirUsuario"></strong>.</p>
+                <div class="alert alert-warning portal-delete-warning text-start mb-4" id="descricaoExcluirUsuario">
+                    <strong class="d-block mb-2"><i class="bi bi-megaphone me-2" aria-hidden="true"></i>As publicações também serão apagadas</strong>
+                    Todas as notícias, os eventos e os avisos cadastrados por esse usuário serão excluídos, incluindo as imagens das notícias.
+                    <span class="d-block mt-2 fw-semibold">Essa ação não poderá ser desfeita pelo portal.</span>
+                </div>
+                <div class="portal-delete-actions">
+                    <button type="button" class="btn btn-outline-secondary px-4" id="cancelarExcluirUsuario" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger px-4" id="confirmarExcluirUsuario"><i class="bi bi-trash me-2" aria-hidden="true"></i>Excluir conta e publicações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script nonce="<?= $nonce ?>">
     document.addEventListener("DOMContentLoaded", () => {
         const painel = document.querySelector(".painel-usuarios");
         if (!painel) return;
@@ -844,37 +879,46 @@ $secoes[] = [
             atualizarLista();
         });
 
+        const avisoExclusao = document.getElementById('excluirUsuarioModal');
+        const modalExclusao = bootstrap.Modal.getOrCreateInstance(avisoExclusao);
+        const confirmarExclusao = document.getElementById('confirmarExcluirUsuario');
+        let formExclusao = null;
+        let botaoExclusao = null;
+
+        avisoExclusao.addEventListener('shown.bs.modal', () => {
+            document.getElementById('cancelarExcluirUsuario').focus();
+        });
+        avisoExclusao.addEventListener('hidden.bs.modal', () => {
+            formExclusao = null;
+            confirmarExclusao.disabled = false;
+            botaoExclusao?.focus();
+        });
+
         painel.querySelectorAll("[data-form-exclusao]").forEach(form => {
             form.addEventListener("submit", event => {
+                event.preventDefault();
                 if (form.dataset.enviando === "1") {
-                    event.preventDefault();
                     return;
                 }
-
-                const tipo = form.dataset.tipo === "administrador" ?
-                    "administrador" :
-                    "aluno";
-
-                const nome = form.dataset.nome || "este usuário";
-
-                const confirmado = confirm(
-                    'Deseja realmente excluir o ' + tipo + ' "' + nome + '"?\n\nEssa ação não poderá ser desfeita.'
-                );
-
-                if (!confirmado) {
-                    event.preventDefault();
-                    return;
-                }
-
-                form.dataset.enviando = "1";
-
-                const botao = form.querySelector('button[type="submit"]');
-                if (botao) botao.disabled = true;
+                formExclusao = form;
+                botaoExclusao = form.querySelector('button[type="submit"]');
+                document.getElementById('nomeExcluirUsuario').textContent = form.dataset.nome || 'este usuário';
+                modalExclusao.show();
             });
+        });
+
+        confirmarExclusao.addEventListener('click', () => {
+            if (!formExclusao || formExclusao.dataset.enviando === '1') return;
+            formExclusao.dataset.enviando = '1';
+            confirmarExclusao.disabled = true;
+            if (botaoExclusao) botaoExclusao.disabled = true;
+            formExclusao.submit();
         });
 
         window.addEventListener("pageshow", event => {
             if (!event.persisted) return;
+            modalExclusao.hide();
+            confirmarExclusao.disabled = false;
 
             painel.querySelectorAll("[data-form-exclusao]").forEach(form => {
                 delete form.dataset.enviando;

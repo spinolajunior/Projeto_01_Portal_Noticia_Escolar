@@ -9,7 +9,7 @@ final class Aviso
 
     public ?int $id = null;
     public string $titulo;
-    public bool $ativo;
+    public ?bool $ativo = null;
     public ?int $id_administrador = null;
     public ?int $id_aluno_adm = null;
 

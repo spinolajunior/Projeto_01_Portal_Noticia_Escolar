@@ -8,6 +8,7 @@
                 </div>
                 <div class="card-body p-3 p-md-4">
                     <form id="formEvento" action="/cadastro/evento" method="POST" novalidate>
+                        <?= \view\View::csrf() ?>
                         <div class="mb-4">
                             <label for="titulo" class="form-label fw-semibold">Título do Evento <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="50" placeholder="Digite o título do evento" aria-describedby="erroTitulo contadorTitulo" required>
@@ -34,7 +35,7 @@
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEvento');
         const titulo = document.getElementById('titulo');

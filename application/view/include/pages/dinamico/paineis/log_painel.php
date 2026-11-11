@@ -59,7 +59,7 @@ foreach ($logs as $log) {
 $quantidadeLogs = count($registros);
 ?>
 <main class="container-fluid py-3 py-md-4">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-logs-cabecalho {
             display: flex;
             align-items: center;

@@ -29,11 +29,11 @@ class AvisoDAO extends DAO
 
             $stmt = $this->pdo->prepare($query);
             $stmt->bindValue(1, $model->titulo);
-            $stmt->bindValue(2, $model->ativo);
+        $stmt->bindValue(2, (int)$model->ativo, PDO::PARAM_INT);
             $stmt->bindValue(3, $id_usuario);
             return ($stmt->execute()) ? $this->get((int)$this->pdo->lastInsertId()) : false;
         } catch (Throwable $e) {
-            return false;
+            throw $e;
         }
     }
     public function update(Aviso $model): Aviso|bool
@@ -66,7 +66,7 @@ class AvisoDAO extends DAO
     }
     public function getAll(): array
     {
-        $query = "SELECT * FROM aviso;";
+        $query = "SELECT * FROM aviso ORDER BY id DESC;";
         $stmt = $this->pdo->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_CLASS, Aviso::class);

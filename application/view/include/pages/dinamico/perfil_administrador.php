@@ -41,7 +41,7 @@ $nivelAcesso = $adm->acesso ?? $adm->nivel ?? null;
 $ativo = (bool)($adm->ativo ?? false);
 ?>
 <main class="container py-4 py-md-5">
-  <style>
+  <style nonce="<?= $nonce ?>">
     .perfil-administrador {
       border-radius: 1rem;
       overflow: hidden
@@ -134,7 +134,7 @@ $ativo = (bool)($adm->ativo ?? false);
     <div class="col-12 col-lg-10 col-xl-9">
       <section class="card perfil-administrador border-0 shadow-sm">
         <header class="cabecalho-perfil px-3 px-md-5 py-4 py-md-5 text-center">
-          <img src="<?= $esc($foto) ?>" alt="Foto de perfil de <?= $esc($nome) ?>" class="foto-perfil shadow-sm mb-3" onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+          <img src="<?= $esc($foto) ?>" alt="Foto de perfil de <?= $esc($nome) ?>" class="foto-perfil shadow-sm mb-3" data-foto-padrao>
           <h1 class="nome-perfil fw-bold mb-2"><?= $esc($nome) ?></h1>
           <p class="mb-3 opacity-75">
             <i class="bi bi-shield-check me-1"></i>

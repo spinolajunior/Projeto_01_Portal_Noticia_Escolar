@@ -4,94 +4,86 @@ namespace controller\aviso;
 
 use controller\Controller;
 use controller\LoginController;
+use controller\LogController;
 use model\aviso\Aviso;
-use model\Escola\Escola;
 use view\Flash_msg;
 use view\View;
 
 abstract class AvisoController extends Controller
 {
-
-
-
-    public static function getAll(): array{
+    public static function getAll(): array
+    {
         return new Aviso()->getAll();
     }
 
-
-
-    public static function painelAviso()
+    public static function painelAviso(): void
     {
-        LoginController::logadoRedirect("/painel/aviso");
-        $obj = new Aviso()->getAll();
-        $model = ["avisos" => array_reverse($obj)];
-        new View("Painel Gerenciamento Aviso!", View::$nav_footer, View::$dinamicoPaineis . "painel_aviso.php", $model)->renderizar();
+        LoginController::logadoRedirect('/painel/aviso');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $lista = array_values(array_filter(new Aviso()->getAll() ?: [], static fn($obj) => self::podeGerenciarPublicacao($obj)));
+        new View('Gerenciar avisos', View::$nav_footer, View::$dinamicoPaineis . 'painel_aviso.php', ['avisos' => $lista])->renderizar();
     }
 
-    public static function insert()
+    public static function insert(): void
     {
-        LoginController::logadoRedirect("/cadastro/aviso");
-        if ($_SERVER['REQUEST_METHOD'] == "GET") {
-            new View("Cadastro Aviso!", View::$nav_footer, View::$formCreate . "cadastrar_aviso.php", null)->renderizar();
-        }if($_SERVER['REQUEST_METHOD'] == 'POST'){
-
-            $id_usuario = $_SESSION["id_usuario"];
-            $obj = new Aviso();
-            $obj->titulo = $_POST['titulo'];
-            $obj->ativo = '1';
-
-            if(!isset($_SESSION['id_tipo_adm'])){
-                $obj->id_aluno_adm = $id_usuario;
-            }else{
-                $obj->id_aluno_adm = $id_usuario;
-            }
-
-            if($obj->insert()){
-                new Flash_msg(201)->flashMsg();
-                header('location: /painel/aviso');
-                exit;
-            }else{
-                new Flash_msg(501)->flashMsg();
-                header('location: /painel/aviso');
-                exit;
-            }
+        LoginController::logadoRedirect('/cadastro/aviso');
+        self::verificarAcesso((object)$_SESSION, 1);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Cadastrar aviso', View::$nav_footer, View::$formCreate . 'cadastrar_aviso.php', null)->renderizar();
+            return;
         }
+        $obj = new Aviso();
+        $obj->titulo = self::campoPost('titulo', 1, 80);
+        $obj->ativo = true;
+        if ($_SESSION['tipo_usuario'] === 'aluno') {
+            $obj->id_aluno_adm = (int)$_SESSION['id_usuario'];
+        } else {
+            $obj->id_administrador = (int)$_SESSION['id_usuario'];
+        }
+        $resultado = $obj->insert();
+        LogController::registrar('aviso_cadastrado', $resultado ? 'sucesso' : 'falha', 'aviso', $resultado ? $resultado->id : null);
+        new Flash_msg($resultado ? 201 : 501)->flashMsg();
+        header('Location: /painel/aviso');
+        exit;
     }
 
-    public static function update()
+    public static function update(): void
     {
-        LoginController::logadoRedirect("/atualizar/aviso");
-        if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
-            $obj = new Aviso();
-            $obj->id = $_GET['id'];
-            $obj = $obj->get();
-            if ($obj) {
-                $model = ["aviso" => $obj];
-                new View("Atualizar Aviso!", View::$nav_footer, View::$formEdit . "edit_aviso.php", $model)->renderizar();
-            }
-        } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
-            var_dump($_POST);
-            $obj = new Aviso();
-            $obj->id = $_POST['id'];
-            $obj->titulo = $_POST['titulo'];
-            $obj->ativo = $_POST['ativo'];
-            if ($obj->update()) {
-                header('location: /painel/aviso');
-                exit;
-            }
+        LoginController::logadoRedirect($_SERVER['REQUEST_URI']);
+        self::verificarAcesso((object)$_SESSION, 1);
+        $obj = new Aviso();
+        $obj->id = self::idRequisicao();
+        $obj = $obj->get();
+        self::autorizarPublicacao($obj);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Editar aviso', View::$nav_footer, View::$formEdit . 'edit_aviso.php', ['aviso' => $obj])->renderizar();
+            return;
         }
+        $obj->titulo = self::campoPost('titulo', 1, 80);
+        $ativo = self::campoPost('ativo', 1, 1);
+        if (!in_array($ativo, ['0', '1'], true)) {
+            throw new \InvalidArgumentException('Status do aviso inválido.');
+        }
+        $obj->ativo = $ativo === '1';
+        $ok = $obj->update();
+        LogController::registrar('aviso_alterado', $ok ? 'sucesso' : 'falha', 'aviso', $obj->id);
+        new Flash_msg($ok ? 202 : 501)->flashMsg();
+        header('Location: /painel/aviso');
+        exit;
     }
-    public static function delete()
+
+    public static function delete(): void
     {
-
-        if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET["id"])) {
-            $obj = new Aviso();
-            $obj->id = (int)$_GET["id"];
-
-            if ($obj->delete()) {
-                header("location: /painel/aviso");
-                exit;
-            }
-        }
+        LoginController::logadoRedirect('/painel/aviso');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $obj = new Aviso();
+        $obj->id = self::idRequisicao();
+        $obj = $obj->get();
+        self::autorizarPublicacao($obj);
+        $ok = $obj->delete();
+        LogController::registrar('aviso_excluido', $ok ? 'sucesso' : 'falha', 'aviso', $obj->id);
+        new Flash_msg($ok ? 203 : 501)->flashMsg();
+        header('Location: /painel/aviso');
+        exit;
     }
 }

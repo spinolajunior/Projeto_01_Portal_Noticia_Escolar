@@ -59,7 +59,7 @@ $imagemHome = static function ($caminho): string {
 $semNoticias = empty($noticias);
 ?>
 <main class="container my-4 home-portal">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .home-carousel {
             overflow: hidden;
             border-radius: 1rem
@@ -348,7 +348,7 @@ $semNoticias = empty($noticias);
                         <div class="carousel-item home-destaque-item <?= $index === 0 ? 'active' : '' ?>">
                             <?php $urlImagem = $imagemHome($noticia->imagem ?? ''); ?>
                             <?php if ($urlImagem !== ''): ?>
-                                <img src="<?= $esc($urlImagem) ?>" class="d-block home-destaque-imagem" alt="<?= $esc($noticia->titulo ?? '') ?>" onerror="this.style.visibility='hidden';">
+                                <img src="<?= $esc($urlImagem) ?>" class="d-block home-destaque-imagem" alt="<?= $esc($noticia->titulo ?? '') ?>" data-imagem-ocultar>
                             <?php else: ?>
                                 <div class="home-destaque-imagem"></div>
                             <?php endif; ?>
@@ -404,7 +404,7 @@ $semNoticias = empty($noticias);
                                 <article class="card h-100 shadow-sm home-noticia-card">
                                     <div class="home-noticia-media">
                                         <?php if ($urlImagem !== ''): ?>
-                                            <img src="<?= $esc($urlImagem) ?>" class="home-noticia-imagem" alt="<?= $esc($noticia->titulo ?? '') ?>" loading="lazy" onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
+                                            <img src="<?= $esc($urlImagem) ?>" class="home-noticia-imagem" alt="<?= $esc($noticia->titulo ?? '') ?>" loading="lazy" data-imagem-placeholder>
                                         <?php endif; ?>
                                         <div class="home-noticia-placeholder <?= $urlImagem !== '' ? 'd-none' : '' ?>">
                                             <i class="bi bi-image fs-1"></i>

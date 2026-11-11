@@ -40,11 +40,10 @@ $nome = $nome !== '' ? $nome : 'Nome não informado';
 $matricula = trim((string)($usuario->matricula ?? ''));
 $serie = trim((string)($usuario->serie ?? ''));
 $nivelAcesso = (int)($usuario->acesso ?? 0);
-$nivelSessao = (int)($_SESSION['nivel'] ?? $nivelAcesso);
 $ativo = (int)($usuario->ativo ?? 0) === 1;
 ?>
 <main class="container py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .perfil-aluno {
             border-radius: 1rem;
             overflow: hidden
@@ -141,7 +140,7 @@ $ativo = (int)($usuario->ativo ?? 0) === 1;
                         src="<?= $esc($foto) ?>"
                         alt="Foto de perfil de <?= $esc($nome) ?>"
                         class="foto-perfil shadow-sm mb-3"
-                        onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                        data-foto-padrao>
 
                     <h1 class="nome-perfil fw-bold mb-2"><?= $esc($nome) ?></h1>
 
@@ -231,14 +230,6 @@ $ativo = (int)($usuario->ativo ?? 0) === 1;
                         </div>
                     </section>
 
-                    <?php if ($nivelSessao >= 1): ?>
-                        <hr class="separador-perfil my-4">
-                        <div class="d-flex justify-content-end">
-                            <a href="/atualizar/myself" class="btn btn-primary fw-semibold px-4 py-2 botao-editar">
-                                <i class="bi bi-pencil-square me-2"></i>Editar meu perfil
-                            </a>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </section>
         </div>

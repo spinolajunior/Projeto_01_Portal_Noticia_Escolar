@@ -3,7 +3,7 @@
 namespace DAOs\endereco;
 
 use model\endereco\Endereco;
-use \DAOS\DAO;
+use \DAOs\DAO;
 use \PDO;
 
 class EnderecoDAO extends DAO
@@ -49,7 +49,7 @@ class EnderecoDAO extends DAO
     }
     public function get(int $id): Endereco|bool
     {
-        $query = "SELECT * FROM ednereco WHERE id = ?;";
+        $query = "SELECT * FROM endereco WHERE id = ?;";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(1, $id);
         $stmt->execute();

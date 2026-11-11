@@ -3,178 +3,58 @@
 namespace DAOs\usuario;
 
 use DAOs\DAO;
-use DAOs\administrador\AdministradorDAO;
-use DAOs\aluno\AlunoDAO;
 use DAOs\credenciais\CredenciaisDAO;
-use model\credenciais\Credenciais;
 use Throwable;
-use PDO;
-
 
 class UsuarioDAO extends DAO
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    // esta função tem como objetivo fazer o update dos dados dos usuarios.
     public function atualizarAdm(array $array): bool
     {
-        try {
-            $usuario = $array['usuario'];
-            $credencial = $array['credencial'];
-            $foto = $array['foto_update'];
-            $this->pdo->beginTransaction();
-
-            $query = "UPDATE administrador SET
-                  nome = ?,
-                  matricula = ?
-                  WHERE id = ?;";
-
-            $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1, $usuario->nome);
-            $stmt->bindValue(2, $usuario->matricula);
-            $stmt->bindValue(3, $usuario->id);
-            $stmt->execute();
-
-            if ($credencial->senha != ''  && $credencial->usuario != '') {
-
-                $query = "UPDATE credenciais SET
-                  usuario = ?,
-                  senha = SHA2(?,256)
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->usuario);
-                $stmt->bindValue(2, $credencial->senha);
-                $stmt->bindValue(3, $credencial->id);
-                $stmt->execute();
-
-
-                // amboms devem ser atualizados!
-            } elseif ($credencial->senha != '' && $credencial->usuario == '') {
-                // aqui somente a senha deve ser alterada!
-                $query = "UPDATE credenciais SET
-                  senha = SHA2(?,256)
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->senha);
-                $stmt->bindValue(2, $credencial->id);
-                $stmt->execute();
-            } elseif ($credencial->senha == '' && $credencial->usuario != '') {
-
-                $query = "UPDATE credenciais SET
-                  usuario = ?
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->usuario);
-                $stmt->bindValue(2, $credencial->id);
-                $stmt->execute();
-            }
-
-            if ($foto !== null) {
-
-                $query = "UPDATE credenciais SET  foto = ? where id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $foto, PDO::PARAM_STR);
-                $stmt->bindValue(2, $credencial->id, PDO::  PARAM_INT);
-                $stmt->execute();
-            }
-
-            $this->pdo->commit();
-            return true;
-        } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            return false;
-        }
+        return $this->atualizarDados($array, 'administrador');
     }
 
     public function atualizarAluno(array $array): bool
     {
-        try {
+        return $this->atualizarDados($array, 'aluno');
+    }
 
+    private function atualizarDados(array $array, string $tipo): bool
+    {
+        try {
             $usuario = $array['usuario'];
             $credencial = $array['credencial'];
-            $foto = $array['foto_update'];
             $this->pdo->beginTransaction();
-
-            $query = "UPDATE aluno SET
-                  nome = ?,
-                  matricula = ?,
-                  data_nascimento = ?,
-                  id_serie = ?
-                  WHERE id = ?;";
-
-            $stmt = $this->pdo->prepare($query);
-            $stmt->bindValue(1, $usuario->nome);
-            $stmt->bindValue(2, $usuario->matricula);
-            $stmt->bindValue(3, $usuario->data_nascimento);
-            $stmt->bindValue(4, $usuario->id_serie);
-            $stmt->bindValue(5, $usuario->id);
-            $stmt->execute();
-
-            if ($credencial->senha != ''  && $credencial->usuario != '') {
-
-                $query = "UPDATE credenciais SET
-                  usuario = ?,
-                  senha = SHA2(?,256)
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->usuario);
-                $stmt->bindValue(2, $credencial->senha);
-                $stmt->bindValue(3, $credencial->id);
-
-            
-                $stmt->execute();
-
-
-                // amboms devem ser atualizados!
-            } elseif ($credencial->senha != '' && $credencial->usuario == '') {
-                // aqui somente a senha deve ser alterada!
-                $query = "UPDATE credenciais SET
-                  senha = SHA2(?,256)
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->senha);
-                $stmt->bindValue(2, $credencial->id);
-                $stmt->execute();
-            } elseif ($credencial->senha == '' && $credencial->usuario != '') {
-
-                $query = "UPDATE credenciais SET
-                  usuario = ?
-                  WHERE id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $credencial->usuario);
-                $stmt->bindValue(2, $credencial->id);
-                $stmt->execute();
+            new CredenciaisDAO($this->pdo)->validarMatricula($usuario->matricula, $credencial->id);
+            // O vínculo vem do banco, não de um ID de credencial enviado pelo formulário.
+            $stmt = $this->pdo->prepare("SELECT id_credenciais FROM $tipo WHERE id = ? FOR UPDATE");
+            $stmt->execute([$usuario->id]);
+            if ((int)$stmt->fetchColumn() !== $credencial->id) {
+                throw new \RuntimeException('Vínculo de credencial inválido.');
             }
-
-            if ($foto !== null) {
-
-                $query = "UPDATE credenciais SET  foto = ? where id = ?;";
-
-                $stmt = $this->pdo->prepare($query);
-                $stmt->bindValue(1, $foto, PDO::PARAM_STR);
-                $stmt->bindValue(2, $credencial->id, PDO::PARAM_INT);
-                $stmt->execute();
+            if ($tipo === 'aluno') {
+                $stmt = $this->pdo->prepare('UPDATE aluno SET nome = ?, matricula = ?, data_nascimento = ?, id_serie = ? WHERE id = ?');
+                $stmt->execute([$usuario->nome, $usuario->matricula, $usuario->data_nascimento, $usuario->id_serie, $usuario->id]);
+            } else {
+                $stmt = $this->pdo->prepare('UPDATE administrador SET nome = ?, matricula = ? WHERE id = ?');
+                $stmt->execute([$usuario->nome, $usuario->matricula, $usuario->id]);
             }
-
+            $dao = new CredenciaisDAO($this->pdo);
+            if (!$dao->update($credencial)) {
+                throw new \RuntimeException('Falha ao atualizar credencial.');
+            }
+            if ($array['foto_update'] !== null) {
+                $credencial->foto = $array['foto_update'];
+                if (!$dao->adicionarFoto($credencial)) {
+                    throw new \RuntimeException('Falha ao atualizar foto.');
+                }
+            }
             $this->pdo->commit();
             return true;
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
-            return false;
+            throw $e;
         }
     }
 }

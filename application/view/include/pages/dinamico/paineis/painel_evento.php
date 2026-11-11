@@ -44,7 +44,7 @@ $quantidadeEventos = count($listaEventos);
 ?>
 
 <main class="container-fluid py-3 py-md-4 painel-eventos">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-eventos .painel-cabecalho {
             display: flex;
             align-items: center;
@@ -497,15 +497,14 @@ $quantidadeEventos = count($listaEventos);
                                                     Editar
                                                 </a>
 
-                                                <a
-                                                    href="/excluir/evento?id=<?= $evento["id"] ?>"
-                                                    class="btn btn-danger btn-sm acao-tabela"
-                                                    title="Excluir evento"
-                                                    data-confirmar-exclusao
-                                                    data-titulo="<?= $exibirValor($evento["titulo"]) ?>">
+                                                <form method="POST" action="/excluir/evento" class="d-inline" data-confirmar-exclusao data-titulo="<?= $exibirValor($evento["titulo"]) ?>">
+                                                    <?= \view\View::csrf() ?>
+                            <input type="hidden" name="id" value="<?= (int)$evento["id"] ?>">
+                            <button type="submit" class="btn btn-danger btn-sm acao-tabela">
                                                     <i class="bi bi-trash-fill me-1"></i>
                                                     Excluir
-                                                </a>
+                                                </button>
+                        </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -556,14 +555,14 @@ $quantidadeEventos = count($listaEventos);
                                             Editar
                                         </a>
 
-                                        <a
-                                            href="/excluir/evento?id=<?= $evento["id"] ?>"
-                                            class="btn btn-danger"
-                                            data-confirmar-exclusao
-                                            data-titulo="<?= $exibirValor($evento["titulo"]) ?>">
+                                        <form method="POST" action="/excluir/evento" class="d-inline" data-confirmar-exclusao data-titulo="<?= $exibirValor($evento["titulo"]) ?>">
+                                            <?= \view\View::csrf() ?>
+                            <input type="hidden" name="id" value="<?= (int)$evento["id"] ?>">
+                            <button type="submit" class="btn btn-danger">
                                             <i class="bi bi-trash-fill me-1"></i>
                                             Excluir
-                                        </a>
+                                        </button>
+                        </form>
                                     </div>
                                 </article>
 
@@ -596,7 +595,7 @@ $quantidadeEventos = count($listaEventos);
     </div>
 </main>
 
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener("DOMContentLoaded", () => {
         const painel = document.querySelector(".painel-eventos [data-painel-eventos]");
         if (!painel) return;
@@ -688,7 +687,7 @@ $quantidadeEventos = count($listaEventos);
         }
 
         painel.querySelectorAll("[data-confirmar-exclusao]").forEach(link => {
-            link.addEventListener("click", event => {
+            link.addEventListener("submit", event => {
                 if (link.dataset.enviando === "1") {
                     event.preventDefault();
                     return;

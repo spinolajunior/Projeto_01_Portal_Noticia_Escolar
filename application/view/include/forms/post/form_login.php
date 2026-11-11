@@ -7,7 +7,7 @@ if (is_string($nextUrl) && preg_match('/^\/(?!\/)[^\x00-\x20\x7F\\\\]*$/', $next
 }
 ?>
 <main class="container portal-login-main d-flex justify-content-center align-items-center py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .portal-login-main {
             min-height: calc(100vh - 170px);
             min-height: calc(100svh - 170px)
@@ -160,6 +160,7 @@ if (is_string($nextUrl) && preg_match('/^\/(?!\/)[^\x00-\x20\x7F\\\\]*$/', $next
             </div>
             <p class="text-secondary small mb-4">Informe suas credenciais para acessar o portal escolar.</p>
             <form id="formLogin" action="<?= $esc($action) ?>" method="POST">
+                <?= \view\View::csrf() ?>
                 <div class="mb-3">
                     <label for="usuario" class="form-label">Usuário <span class="text-danger">*</span></label>
                     <div class="input-group">
@@ -180,10 +181,6 @@ if (is_string($nextUrl) && preg_match('/^\/(?!\/)[^\x00-\x20\x7F\\\\]*$/', $next
                         <i class="bi bi-exclamation-triangle me-1"></i>Caps Lock está ativado.
                     </div>
                 </div>
-                <div class="form-check mt-3 mb-4">
-                    <input class="form-check-input" type="checkbox" id="remember" name="checkLembrar" value="1">
-                    <label class="form-check-label" for="remember">Lembrar-me</label>
-                </div>
                 <button type="submit" id="btnEntrar" class="btn btn-primary btn-entrar w-100 fw-semibold d-flex justify-content-center align-items-center gap-2">
                     <span id="textoEntrar">Entrar no portal</span>
                     <i class="bi bi-arrow-right" id="iconeEntrar"></i>
@@ -197,7 +194,7 @@ if (is_string($nextUrl) && preg_match('/^\/(?!\/)[^\x00-\x20\x7F\\\\]*$/', $next
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formLogin');
         const senha = document.getElementById('senha');

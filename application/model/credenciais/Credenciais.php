@@ -11,8 +11,13 @@ final class Credenciais
     public string $senha;
     public string $criado_em;
     public ?string $last_login;
-    public bool $ativo;
+    public ?bool $ativo = null;
     public ?string $foto = null;
+
+    public static function hashSenha(string $senha): string
+    {
+        return password_hash($senha, defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_BCRYPT);
+    }
 
     public function get(): Credenciais|bool
     {

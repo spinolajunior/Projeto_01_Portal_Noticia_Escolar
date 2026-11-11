@@ -61,7 +61,7 @@ $quantidadeAvisos = count($listaAvisos);
 
 <main class="container-fluid py-3 py-md-4 painel-avisos">
 
-    <style>
+    <style nonce="<?= $nonce ?>">
         .painel-avisos .painel-cabecalho {
             display: flex;
             align-items: center;
@@ -494,15 +494,14 @@ $quantidadeAvisos = count($listaAvisos);
                                                     Editar
                                                 </a>
 
-                                                <a
-                                                    href="/excluir/aviso?id=<?= $aviso["id"] ?>"
-                                                    class="btn btn-danger btn-sm acao-tabela"
-                                                    title="Excluir aviso"
-                                                    data-confirmar-exclusao
-                                                    data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                                <form method="POST" action="/excluir/aviso" class="d-inline" data-confirmar-exclusao data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                                    <?= \view\View::csrf() ?>
+                            <input type="hidden" name="id" value="<?= (int)$aviso["id"] ?>">
+                            <button type="submit" class="btn btn-danger btn-sm acao-tabela">
                                                     <i class="bi bi-trash-fill me-1"></i>
                                                     Excluir
-                                                </a>
+                                                </button>
+                        </form>
                                             </div>
                                         </td>
 
@@ -550,14 +549,14 @@ $quantidadeAvisos = count($listaAvisos);
                                             Editar
                                         </a>
 
-                                        <a
-                                            href="/excluir/aviso?id=<?= $aviso["id"] ?>"
-                                            class="btn btn-danger"
-                                            data-confirmar-exclusao
-                                            data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                        <form method="POST" action="/excluir/aviso" class="d-inline" data-confirmar-exclusao data-titulo="<?= $exibirValor($aviso["titulo"]) ?>">
+                                            <?= \view\View::csrf() ?>
+                            <input type="hidden" name="id" value="<?= (int)$aviso["id"] ?>">
+                            <button type="submit" class="btn btn-danger">
                                             <i class="bi bi-trash-fill me-1"></i>
                                             Excluir
-                                        </a>
+                                        </button>
+                        </form>
                                     </div>
 
                                 </article>
@@ -592,7 +591,7 @@ $quantidadeAvisos = count($listaAvisos);
     </div>
 </main>
 
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener("DOMContentLoaded", () => {
 
         const painel = document.querySelector(".painel-avisos [data-painel-avisos]");
@@ -682,7 +681,7 @@ $quantidadeAvisos = count($listaAvisos);
         }
 
         painel.querySelectorAll("[data-confirmar-exclusao]").forEach(link => {
-            link.addEventListener("click", event => {
+            link.addEventListener("submit", event => {
                 const titulo = link.dataset.titulo || "este aviso";
 
                 const confirmar = confirm(

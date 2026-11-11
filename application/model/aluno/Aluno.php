@@ -1,6 +1,6 @@
 <?php
 
-namespace model\Aluno;
+namespace model\aluno;
 
 use DAOs\aluno\AlunoDAO;
 use DAOs\usuario\UsuarioDAO;
@@ -8,6 +8,7 @@ use DAOs\usuario\UsuarioDAO;
 final class Aluno
 {
     public ?int $id = null;
+    public ?string $nome_serie = null;
     public ?string $foto = null;
     public string $nome;
 

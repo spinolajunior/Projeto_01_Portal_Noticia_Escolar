@@ -1,5 +1,5 @@
 <main class="container my-4 my-lg-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .card-noticia {
             border-radius: 14px;
             overflow: hidden
@@ -57,29 +57,30 @@
                 </div>
                 <div class="card-body p-3 p-md-4">
                     <form id="formCadastroNoticia" action="/cadastro/noticia" method="POST" enctype="multipart/form-data" novalidate>
+                        <?= \view\View::csrf() ?>
                         <div class="mb-4">
                             <label for="titulo" class="form-label fw-semibold">Título da Notícia <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="150" placeholder="Digite o título da notícia" aria-describedby="erroTitulo contadorTitulo" required>
+                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="50" placeholder="Digite o título da notícia" aria-describedby="erroTitulo contadorTitulo" required>
                             <div class="invalid-feedback" id="erroTitulo"></div>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Entre 5 e 150 caracteres.</small>
-                                <small class="contador" id="contadorTitulo">0/150</small>
+                                <small class="text-muted">Entre 5 e 50 caracteres.</small>
+                                <small class="contador" id="contadorTitulo">0/50</small>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="subtitulo" class="form-label fw-semibold">Subtítulo / Resumo <span class="text-muted fw-normal">(opcional)</span></label>
-                            <input type="text" class="form-control" id="subtitulo" name="subtitulo" maxlength="255" placeholder="Escreva um pequeno resumo" aria-describedby="erroSubtitulo contadorSubtitulo">
+                            <input type="text" class="form-control" id="subtitulo" name="subtitulo" maxlength="80" placeholder="Escreva um pequeno resumo" aria-describedby="erroSubtitulo contadorSubtitulo">
                             <div class="invalid-feedback" id="erroSubtitulo"></div>
                             <div class="text-end mt-1">
-                                <small class="contador" id="contadorSubtitulo">0/255</small>
+                                <small class="contador" id="contadorSubtitulo">0/80</small>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="texto" class="form-label fw-semibold">Conteúdo Principal <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="texto" name="descricao" rows="9" minlength="30" placeholder="Escreva aqui o conteúdo completo da notícia..." aria-describedby="erroTexto contadorTexto" required></textarea>
+                            <textarea class="form-control" id="texto" name="descricao" rows="9" minlength="1" placeholder="Escreva aqui o conteúdo completo da notícia..." aria-describedby="erroTexto contadorTexto" required></textarea>
                             <div class="invalid-feedback" id="erroTexto"></div>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Mínimo de 30 caracteres.</small>
+                                <small class="text-muted">Mínimo de 1 caracteres.</small>
                                 <small class="contador" id="contadorTexto">0 caracteres</small>
                             </div>
                         </div>
@@ -115,7 +116,7 @@
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formCadastroNoticia');
         const titulo = document.getElementById('titulo');
@@ -141,8 +142,8 @@
         let enviando = false;
 
         function atualizarContadores() {
-            document.getElementById('contadorTitulo').textContent = `${titulo.value.length}/150`;
-            document.getElementById('contadorSubtitulo').textContent = `${subtitulo.value.length}/255`;
+            document.getElementById('contadorTitulo').textContent = `${titulo.value.length}/50`;
+            document.getElementById('contadorSubtitulo').textContent = `${subtitulo.value.length}/80`;
             document.getElementById('contadorTexto').textContent = `${texto.value.trim().length} caracteres`;
         }
 
@@ -153,16 +154,16 @@
             if (campo.id === 'titulo') {
                 if (!valor) mensagem = 'Informe o título da notícia.';
                 else if (valor.length < 5) mensagem = 'O título precisa ter pelo menos 5 caracteres.';
-                else if (valor.length > 150) mensagem = 'O título pode ter no máximo 150 caracteres.';
+                else if (valor.length > 50) mensagem = 'O título pode ter no máximo 50 caracteres.';
             }
 
-            if (campo.id === 'subtitulo' && valor.length > 255) {
-                mensagem = 'O subtítulo pode ter no máximo 255 caracteres.';
+            if (campo.id === 'subtitulo' && valor.length > 80) {
+                mensagem = 'O subtítulo pode ter no máximo 80 caracteres.';
             }
 
             if (campo.id === 'texto') {
                 if (!valor) mensagem = 'Informe o conteúdo da notícia.';
-                else if (valor.length < 30) mensagem = 'O conteúdo precisa ter pelo menos 30 caracteres.';
+                else if (valor.length < 1) mensagem = 'O conteúdo precisa ter pelo menos 1 caractere.';
             }
 
             const valido = mensagem === '';

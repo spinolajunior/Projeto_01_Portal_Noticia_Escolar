@@ -11,7 +11,19 @@ use controller\LoginController;
 use view\Flash_msg;
 
 
-$uri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$metodo = $_SERVER['REQUEST_METHOD'];
+$somentePost = ['/logout', '/excluir/noticia', '/excluir/evento', '/excluir/aviso', '/excluir/usuario'];
+$formularios = ['/login', '/cadastro/usuario', '/atualizar/usuario/aluno', '/atualizar/usuario/administrador', '/painel/acesso/usuario', '/atualizar/myself', '/cadastro/noticia', '/atualizar/noticia', '/cadastro/evento', '/atualizar/evento', '/cadastro/aviso', '/atualizar/aviso'];
+$permitidos = in_array($uri, $somentePost, true) ? ['POST'] : (in_array($uri, $formularios, true) ? ['GET', 'POST'] : ['GET']);
+if (!in_array($metodo, $permitidos, true)) {
+    header('Allow: ' . implode(', ', $permitidos));
+    HomeController::erro(405, 'Método de requisição não permitido.');
+    return;
+}
+if ($metodo === 'POST') {
+    Controller::validarCsrf();
+}
 
 switch ($uri) {
 
@@ -19,12 +31,10 @@ switch ($uri) {
         HomeController::index();
         break;
     case "/contato":
-        new Flash_msg(0,'Esta view ainda não foi implementada!')->flashMsg();
-        HomeController::not_found();
+        HomeController::emDesenvolvimento();
         break;
     case "/cetidam":
-         new Flash_msg(0,'Esta view ainda não foi implementada!')->flashMsg();
-         HomeController::not_found();
+         HomeController::emDesenvolvimento();
          break;
 
     case "/not_found":
@@ -61,7 +71,7 @@ switch ($uri) {
         UsuarioController::gerenciarUsuario();
         break;
     case "/excluir/usuario":
-        // UsuarioController::excluir();
+        UsuarioController::excluir();
         break;
     case "/painel/acesso/usuario":
         UsuarioController::updateAcessoUsuario();
@@ -110,7 +120,7 @@ switch ($uri) {
 
     //View avisos
     case "/avisos":
-        include VIEW . "comunicado/Comunicados.php";
+        HomeController::index();
         break;
     case "/painel/aviso":
         AvisoController::painelAviso();
@@ -126,14 +136,11 @@ switch ($uri) {
         break;
 
 
-    case "/contato":
-        include VIEW . "contato/Contato.php";
-        break;
     case "/perfil":
         UsuarioController::perfil();
         break;
 
     default:
-        header('Location: /');
-        exit;
+        HomeController::not_found();
+        break;
 }

@@ -11,14 +11,15 @@ $aviso = $model['aviso'];
                 </div>
                 <div class="card-body p-3 p-md-4 p-lg-5">
                     <form id="formEditarAviso" method="POST" action="/atualizar/aviso" novalidate>
+                        <?= \view\View::csrf() ?>
                         <input type="hidden" name="id" value="<?= (int)$aviso->id ?>">
                         <div class="mb-4">
                             <label for="titulo" class="form-label fw-semibold">Título do Aviso <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="5" maxlength="50" value="<?= htmlspecialchars($aviso->titulo ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="Digite o título do aviso" aria-describedby="erroTitulo contadorTitulo" required>
+                            <input type="text" class="form-control" id="titulo" name="titulo" minlength="1" maxlength="80" value="<?= htmlspecialchars($aviso->titulo ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="Digite o título do aviso" aria-describedby="erroTitulo contadorTitulo" required>
                             <div class="invalid-feedback" id="erroTitulo"></div>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Entre 5 e 50 caracteres.</small>
-                                <small class="text-muted" id="contadorTitulo">0/50</small>
+                                <small class="text-muted">Entre 1 e 80 caracteres.</small>
+                                <small class="text-muted" id="contadorTitulo">0/80</small>
                             </div>
                         </div>
                         <div class="mb-4">
@@ -41,7 +42,7 @@ $aviso = $model['aviso'];
         </div>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('formEditarAviso');
         const titulo = document.getElementById('titulo');
@@ -58,10 +59,10 @@ $aviso = $model['aviso'];
 
             if (!valor) {
                 mensagem = 'O título do aviso é obrigatório.';
-            } else if (valor.length < 5) {
-                mensagem = 'O título precisa ter pelo menos 5 caracteres.';
-            } else if (valor.length > 50) {
-                mensagem = 'O título pode ter no máximo 50 caracteres.';
+            } else if (valor.length < 1) {
+                mensagem = 'O título precisa ter pelo menos 1 caractere.';
+            } else if (valor.length > 80) {
+                mensagem = 'O título pode ter no máximo 80 caracteres.';
             }
 
             const valido = mensagem === '';
@@ -72,7 +73,7 @@ $aviso = $model['aviso'];
             else titulo.removeAttribute('aria-invalid');
 
             erroTitulo.textContent = mensagem;
-            contador.textContent = `${valor.length}/50`;
+            contador.textContent = `${valor.length}/80`;
 
             return valido;
         }

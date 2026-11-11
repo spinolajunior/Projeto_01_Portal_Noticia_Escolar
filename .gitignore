@@ -1,2 +1,15 @@
-#Aquivo com os dados de conexão do banco de dados!.
-config.php
+# Configuração privada de cada instalação; somente o exemplo é versionado.
+/application/config.php
+/config/*
+storage/
+application/logs/*.log
+tests/.artifacts/
+__pycache__/
+.env
+.env.*
+!.env.example
+/application/view/img/upload/*
+!/application/view/img/upload/.htaccess
+!/application/view/img/upload/perfil_usuario/
+/application/view/img/upload/perfil_usuario/*
+!/application/view/img/upload/perfil_usuario/user_def.jpg

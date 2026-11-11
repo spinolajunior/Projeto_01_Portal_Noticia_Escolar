@@ -3,27 +3,24 @@
 namespace DAOs;
 
 use \PDO;
-use PDOException;
 
 abstract class DAO
 {
     public ?PDO $pdo = null;
-    public function __construct()
+    public function __construct(?PDO $pdo = null)
     {
-        try {
-            if ($this->pdo === null) {
-                $this->pdo = new PDO(
-                    $_ENV["db"]["dsn"],
-                    $_ENV["db"]["user"],
-                    $_ENV["db"]["pass"],
-                    [
-                        PDO::ATTR_PERSISTENT => true,
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    ]
-                );
-            }
-        } catch (PDOException $e) {
-            echo "Falha ao conectar ao banco de dados " . $e->getMessage();
+        $this->pdo = $pdo;
+        if ($this->pdo === null) {
+            $this->pdo = new PDO(
+                $_ENV["db"]["dsn"],
+                $_ENV["db"]["user"],
+                $_ENV["db"]["pass"],
+                [
+                    PDO::ATTR_PERSISTENT => false,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                ]
+            );
         }
     }
 

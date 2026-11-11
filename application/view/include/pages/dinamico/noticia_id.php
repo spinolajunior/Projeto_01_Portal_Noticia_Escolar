@@ -47,7 +47,7 @@ $conteudo = trim((string)($noticia->descricao ?? ''));
 $paragrafos = preg_split('/\R{2,}/u', $conteudo) ?: [];
 ?>
 <main class="container-fluid py-4 py-md-5">
-    <style>
+    <style nonce="<?= $nonce ?>">
         .noticia-container {
             width: 85%;
             max-width: 1150px;
@@ -279,7 +279,7 @@ $paragrafos = preg_split('/\R{2,}/u', $conteudo) ?: [];
                         <p class="noticia-subtitulo"><?= $esc($noticia->subtitulo) ?></p>
                     <?php endif; ?>
                     <div class="noticia-autor">
-                        <img src="<?= $esc($fotoAutor) ?>" alt="Foto de <?= $esc($autor) ?>" class="noticia-autor-foto" onerror="this.onerror=null;this.src='/view/img/upload/perfil_usuario/user_def.jpg';">
+                        <img src="<?= $esc($fotoAutor) ?>" alt="Foto de <?= $esc($autor) ?>" class="noticia-autor-foto" data-foto-padrao>
                         <div class="noticia-autor-info">
                             <span class="noticia-autor-legenda">Publicado por</span>
                             <div class="noticia-autor-nome"><?= $esc($autor) ?></div>
@@ -322,7 +322,7 @@ $paragrafos = preg_split('/\R{2,}/u', $conteudo) ?: [];
         </article>
     </div>
 </main>
-<script>
+<script nonce="<?= $nonce ?>">
     document.addEventListener('DOMContentLoaded', () => {
         const imagem = document.getElementById('imagemNoticia');
         const semImagem = document.getElementById('semImagem');

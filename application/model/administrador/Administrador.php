@@ -1,14 +1,15 @@
 <?php
 
-namespace model\Administrador;
+namespace model\administrador;
 
-use DAOS\administrador\AdministradorDAO;
+use DAOs\administrador\AdministradorDAO;
 use DAOs\usuario\UsuarioDAO;
 
 final class Administrador
 {
     public ?int $id = null;
 
+    public ?string $cargo = null;
     public ?string $foto = null;
     public string $nome;
     public ?string $matricula;

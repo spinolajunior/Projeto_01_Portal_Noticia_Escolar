@@ -4,36 +4,36 @@ namespace controller\administrador;
 
 use controller\Controller;
 use controller\LoginController;
-use model\Administrador\Administrador;
+use controller\UsuarioController;
+use model\administrador\Administrador;
 use view\View;
 
 abstract class AdministradorController extends Controller
 {
 
     public static function get(): void {
-        
+        UsuarioController::gerenciarUsuario();
     }
 
     public static function getById(int $id): Administrador|bool
     {
+        self::verificarGestor();
         $obj = new Administrador();
         $obj->id = $id;
         $resultado = $obj->get();
-        return (is_object($resultado))? $resultado : false;
+        return $resultado !== false && self::podeGerenciarUsuario($resultado, 'administrador') ? $resultado : false;
     }
 
 
     public static function insert(): void
     {
-        LoginController::logadoRedirect(null);
-        new View("CADASTRO ADM!", View::$logado, VIEW . "include/forms/create/cadastrar_adm.php", null)->renderizar();
+        UsuarioController::cadastroUsuario();
     }
 
     public static function update(): void
     {
-        self::logadoRedirect();
-        new View("Editar ADM", View::$logado, VIEW . "include/forms/update/update_adm.php", null)->renderizar();
+        UsuarioController::editarAdm();
     }
 
-    public static function delete(): void {}
+    public static function delete(): void { UsuarioController::excluir(); }
 }

@@ -2,90 +2,86 @@
 
 namespace controller\evento;
 
-use controller\LoginController;
 use controller\Controller;
+use controller\LoginController;
+use controller\LogController;
+use model\evento\Evento;
 use view\Flash_msg;
 use view\View;
-use model\evento\Evento;
 
 abstract class EventoController extends Controller
 {
+    public static function getAll(): array
+    {
+        return new Evento()->get() ?: [];
+    }
 
     public static function painelEvento(): void
     {
-        LoginController::logadoRedirect("/painel/evento");
-        $obj = new Evento()->get();
-        $model = ["eventos" => $obj];
-        new View("Painel Gerenciamento Evento!", VIEW::$nav_footer, VIEW::$dinamicoPaineis . "painel_evento.php", $model)->renderizar();
+        LoginController::logadoRedirect('/painel/evento');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $lista = array_values(array_filter(new Evento()->get() ?: [], static fn($obj) => self::podeGerenciarPublicacao($obj)));
+        new View('Gerenciar eventos', View::$nav_footer, View::$dinamicoPaineis . 'painel_evento.php', ['eventos' => $lista])->renderizar();
     }
 
-    public static function insert()
+    public static function insert(): void
     {
-        LoginController::logadoRedirect("/cadastro/evento");
-        LoginController::verificarAcesso((object)$_SESSION,1);
-        
-        if ($_SERVER['REQUEST_METHOD'] == "GET") {
-            new View("Cadastrar Evento!", VIEW::$nav_footer, VIEW::$formCreate . "cadastrar_evento.php", null)->renderizar();
-        } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
-            $obj = new Evento();
-            $obj->titulo = $_POST["titulo"];
-            $obj->data_evento = $_POST["data_evento"];
-
-            if (!isset($_SESSION['id_tipo_adm'])) {
-                $obj->id_aluno_adm = (int)$_SESSION['id_usuario'];
-            } else {
-                $obj->id_administrador = (int)$_SESSION["id_usuario"];
-            }
-
-            if ($obj->insert()) {
-                new Flash_msg(201)->flashMsg();
-                header("location: /painel/evento");
-                exit;
-            }else{
-                new Flash_msg(501)->flashMsg();
-                header("location: /painel/evento");
-                exit;
-            }
+        LoginController::logadoRedirect('/cadastro/evento');
+        self::verificarAcesso((object)$_SESSION, 1);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Cadastrar evento', View::$nav_footer, View::$formCreate . 'cadastrar_evento.php', null)->renderizar();
+            return;
         }
-    }
-    public static function update()
-    {
-        LoginController::logadoRedirect("/atualizar/evento");
-        if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET["id"])) {
-            $obj = new Evento();
-            $obj->id = (int)$_GET["id"];
-            $obj = $obj->getById();
-            $model = ["evento" => $obj];
-            new View("Atualizar Evento!", VIEW::$nav_footer, VIEW::$formEdit . "edit_evento.php", $model)->renderizar();
-        } elseif ($_SERVER["REQUEST_METHOD"] == "POST") {
-            var_dump($_POST);
-            $obj = new Evento();
-            $obj->id = $_POST['id'];
-            $obj->titulo = $_POST['titulo'];
-            $obj->data_evento = $_POST['data_evento'];
-            if ($obj->update()) {
-                header('location: /painel/evento');
-                exit;
-            }
+        $obj = new Evento();
+        $obj->titulo = self::campoPost('titulo', 5, 50);
+        $obj->data_evento = self::campoPost('data_evento', 10, 10);
+        self::validarData($obj->data_evento, true);
+        if ($_SESSION['tipo_usuario'] === 'aluno') {
+            $obj->id_aluno_adm = (int)$_SESSION['id_usuario'];
+        } else {
+            $obj->id_administrador = (int)$_SESSION['id_usuario'];
         }
+        $resultado = $obj->insert();
+        LogController::registrar('evento_cadastrado', $resultado ? 'sucesso' : 'falha', 'evento', $resultado ? $resultado->id : null);
+        new Flash_msg($resultado ? 201 : 501)->flashMsg();
+        header('Location: /painel/evento');
+        exit;
     }
-    public static function delete()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET["id"])) {
-            $obj = new Evento();
-            $obj->id = (int)$_GET["id"];
 
-            if ($obj->delete()) {
-                header("location: /painel/evento");
-                exit;
-            }
-        }
-    }
-    public static function get() {}
-    public static function getAll(): array
+    public static function update(): void
     {
-        $consulta = new Evento()->get();
-        return ($consulta != false) ? $consulta : [];
+        LoginController::logadoRedirect($_SERVER['REQUEST_URI']);
+        self::verificarAcesso((object)$_SESSION, 1);
+        $obj = new Evento();
+        $obj->id = self::idRequisicao();
+        $obj = $obj->getById();
+        self::autorizarPublicacao($obj);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Editar evento', View::$nav_footer, View::$formEdit . 'edit_evento.php', ['evento' => $obj])->renderizar();
+            return;
+        }
+        $obj->titulo = self::campoPost('titulo', 5, 50);
+        $obj->data_evento = self::campoPost('data_evento', 10, 10);
+        self::validarData($obj->data_evento, true);
+        $ok = $obj->update();
+        LogController::registrar('evento_alterado', $ok ? 'sucesso' : 'falha', 'evento', $obj->id);
+        new Flash_msg($ok ? 202 : 501)->flashMsg();
+        header('Location: /painel/evento');
+        exit;
     }
-    public static function getById() {}
+
+    public static function delete(): void
+    {
+        LoginController::logadoRedirect('/painel/evento');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $obj = new Evento();
+        $obj->id = self::idRequisicao();
+        $obj = $obj->getById();
+        self::autorizarPublicacao($obj);
+        $ok = $obj->delete();
+        LogController::registrar('evento_excluido', $ok ? 'sucesso' : 'falha', 'evento', $obj->id);
+        new Flash_msg($ok ? 203 : 501)->flashMsg();
+        header('Location: /painel/evento');
+        exit;
+    }
 }

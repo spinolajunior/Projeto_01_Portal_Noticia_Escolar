@@ -3,224 +3,150 @@
 namespace controller\noticia;
 
 use controller\Controller;
+use controller\HomeController;
 use controller\LoginController;
-use model\Administrador\Administrador;
-use model\Aluno\Aluno;
-use model\Noticia\Noticia;
+use controller\LogController;
+use model\administrador\Administrador;
+use model\aluno\Aluno;
+use model\noticia\Noticia;
 use model\credenciais\Credenciais;
 use Throwable;
+use InvalidArgumentException;
 use view\Flash_msg;
 use view\View;
-
 
 abstract class NoticiaController extends Controller
 {
     public static function getALL(): bool|array
     {
-        $model = new Noticia()->getAll();
-
-        return count($model) > 0 ? $model : false;
+        return new Noticia()->getAll();
     }
 
     public static function insert(): void
     {
-        LoginController::logadoRedirect("/cadastro/noticia");
-        LoginController::verificarAcesso((object)$_SESSION, 1);
-
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['img']) && $_FILES['img']['error'] === UPLOAD_ERR_OK) {
-            $operacoes =  0;
-
-            $model = new Noticia();
-            $model->titulo = $_POST["titulo"];
-            $model->subtitulo = $_POST["subtitulo"];
-            $model->descricao = $_POST["descricao"];
-            $model->data_pub = date('Y-m-d H:i:s');
-            $model->status = true;
-            if (!isset($_SESSION['id_tipo_adm'])) {
-                $model->id_aluno_adm = (int)$_SESSION['id_usuario'];
-            } else {
-                $model->id_administrador = $_SESSION["id_usuario"];
-            }
-            $result = $model->insert();
-
-            if ($result !== false) {
-
-                $idNoticia = $result->id;
-
-                try {
-
-                    $model = new Noticia();
-                    $model->id = $idNoticia;
-                    $model->imagem = self::adicionarFoto($_FILES['img'], View::$uploadImagemNoticia, $idNoticia);
-
-                    if ($model->setImg()) {
-                        $operacoes++;
-                    }
-                } catch (Throwable $e) {
-                    $result->delete();
-                    new Flash_msg(501)->flashMsg();
-                    header('location: /painel/noticia');
-                    exit;
-                }
-            }
-            new Flash_msg(200)->flashMsg();
-            header('Location: /painel/noticia');
-            exit;
-        } elseif ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            new View("Cadastrar Noticia", View::$nav_footer, View::$formCreate . "Cadastrar_noticia.php", null)->renderizar();
+        LoginController::logadoRedirect('/cadastro/noticia');
+        self::verificarAcesso((object)$_SESSION, 1);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Cadastrar notícia', View::$nav_footer, View::$formCreate . 'cadastrar_noticia.php', null)->renderizar();
+            return;
         }
+        $model = new Noticia();
+        $model->titulo = self::campoPost('titulo', 5, 50);
+        $model->subtitulo = self::campoPost('subtitulo', 0, 80);
+        $model->descricao = self::campoPost('descricao', 1, 65535);
+        $model->data_pub = date('Y-m-d H:i:s');
+        $model->status = true;
+        if ($_SESSION['tipo_usuario'] === 'aluno') {
+            $model->id_aluno_adm = (int)$_SESSION['id_usuario'];
+        } else {
+            $model->id_administrador = (int)$_SESSION['id_usuario'];
+        }
+        if (!isset($_FILES['img'])) {
+            throw new InvalidArgumentException('Selecione uma imagem válida para a notícia.');
+        }
+        $model->imagem = self::adicionarFoto($_FILES['img'], View::$uploadImagemNoticia, (string)$_SESSION['id_credencial']);
+        try {
+            $resultado = $model->insert();
+            if ($resultado === false) {
+                throw new \RuntimeException('Falha ao cadastrar notícia.');
+            }
+        } catch (Throwable $e) {
+            self::removerFoto($model->imagem);
+            throw $e;
+        }
+        LogController::registrar('noticia_cadastrada', 'sucesso', 'noticia', $resultado->id);
+        new Flash_msg(201)->flashMsg();
+        header('Location: /painel/noticia');
+        exit;
     }
 
     public static function get(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET["id"])) {
-
-            $model = null;
-            $user_resposavel = null;
-
-            $model = new Noticia();
-            $model->id = (int)$_GET["id"];
-            $model =  $model->get();
-
-
-            if ($model !== false && $model->id_administrador !== null) {
-
-                $user_resposavel = new Administrador();
-                $user_resposavel->id = $model->id_administrador;
-                $user_resposavel = $user_resposavel->get();
-                
-                if($user_resposavel === false){
-                    new Flash_msg(502)->flashMsg();
-                    header('location: /');
-                    exit;
-                }
-            } elseif ($model !== false && $model->id_aluno_adm !== null) {
-
-                $user_resposavel =  new Aluno();
-                $user_resposavel->id = $model->id_aluno_adm;
-                $user_resposavel= $user_resposavel->get();
-                
-                if($user_resposavel === false){
-                    new Flash_msg(502)->flashMsg();
-                    header('location: /');
-                    exit;
-                }
-            } elseif ($model === false) {
-
-                new Flash_msg(404,"Noticia id= {$_GET['id']} não encontrada!")->flashMsg();
-                header('location: /not_found');
-                exit;
-            }
-            $foto = new Credenciais();
-            $foto->id = $user_resposavel->id_credenciais;
-            $foto = $foto->buscarFotoAutorPubli();
-
-
-            new View(
-                $model->titulo,
-                View::$nav_footer,
-                View::$dinamico . "noticia_id.php",
-                [
-                    "noticia" => $model,
-                    "adm" => $user_resposavel,
-                    "foto_autor" =>($foto !== false)?$foto : null
-                ]
-            )->renderizar();
-        } else {
-            new Flash_msg(510)->flashMsg();
-            header("Location: /");
-            exit;
+        $noticia = new Noticia();
+        $noticia->id = self::idRequisicao();
+        $noticia = $noticia->get();
+        if ($noticia === false || !$noticia->status) {
+            HomeController::not_found();
+            return;
         }
+        $autor = $noticia->id_administrador !== null ? new Administrador() : new Aluno();
+        $autor->id = $noticia->id_administrador ?? $noticia->id_aluno_adm;
+        $autor = $autor->id !== null ? $autor->get() : false;
+        $foto = false;
+        if ($autor !== false && $autor->id_credenciais !== null) {
+            $credencial = new Credenciais();
+            $credencial->id = $autor->id_credenciais;
+            $foto = $credencial->buscarFotoAutorPubli();
+        }
+        new View($noticia->titulo, View::$nav_footer, View::$dinamico . 'noticia_id.php', ['noticia' => $noticia, 'adm' => $autor ?: (object)['nome' => 'Autor não disponível'], 'foto_autor' => $foto ?: null])->renderizar();
     }
 
     public static function update(): void
     {
-
-        LoginController::logadoRedirect("");
-        LoginController::verificarAcesso((object)$_SESSION, 1);
-        $obj =  new Noticia();
-        if ($_SERVER['REQUEST_METHOD'] === "GET" && isset($_GET["id"])) {
-            $obj->id = (int)$_GET['id'];
-            $consulta = $obj->get();
-            $model = (is_object($consulta)) ? ["noticia" => $consulta, "url_imagem" => $consulta->imagem] : null;
-
-            new View("Editar Noticia!", View::$nav_footer, View::$formEdit . "edit_noticia.php", $model)->renderizar();
-        } elseif ($_SERVER['REQUEST_METHOD'] === "POST") {
-
-            $id = $_POST["id"];
-            $titulo = $_POST["titulo"];
-            $subtitulo = $_POST["subtitulo"];
-            $descricao = $_POST["descricao"];
-            $status = $_POST["status"];
-
-            $obj = new Noticia();
-            $obj->id = $id;
-            $obj->titulo = $titulo;
-            $obj->subtitulo = $subtitulo;
-            $obj->descricao = $descricao;
-            $obj->status = $status;
-
-
-
-
-            try {
-                $obj->update();
-                if ($_FILES["imagem"]["size"] !== 0 && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
-                    $idNoticia = $obj->id;
-                    $model = new Noticia();
-                    $model->id = $obj->id;
-                    $model->imagem = self::adicionarFoto($_FILES['imagem'], View::$uploadImagemNoticia, $idNoticia);
-
-                    $noticia = $model->get();
-                    if ($model->setImg() && $noticia) {
-                        unlink(preg_replace('~/+~', '/', BASE_DIR . $noticia->imagem));
-                        new Flash_msg(200)->flashMsg();
-                        header('location: /painel/noticia');
-                        exit;
-                    }
-                } else {
-                    new Flash_msg(200)->flashMsg();
-                    header('location: /painel/noticia');
-                    exit;
-                }
-            } catch (Throwable $e) {
-                new Flash_msg(501)->flashMsg();
-                header('location: /painel/noticia');
-                exit;
-            }
-        }
-    }
-
-    public static function delete()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['id']))
-            $id = $_GET['id'];
+        LoginController::logadoRedirect($_SERVER['REQUEST_URI']);
+        self::verificarAcesso((object)$_SESSION, 1);
         $obj = new Noticia();
-        $obj->id = $id;
-        $noticia = $obj->get();
-        if ($obj->delete() && $noticia) {
-            unlink(preg_replace('~/+~', '/', BASE_DIR . $noticia->imagem));
-            new Flash_msg(200)->flashMsg();
-            header('location: /painel/noticia');
-            exit;
-        } else {
-            new Flash_msg(501)->flashMsg();
-            header('location: /painel/noticia');
-            exit;
+        $obj->id = self::idRequisicao();
+        $obj = $obj->get();
+        self::autorizarPublicacao($obj);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            new View('Editar notícia', View::$nav_footer, View::$formEdit . 'edit_noticia.php', ['noticia' => $obj, 'url_imagem' => $obj->imagem])->renderizar();
+            return;
         }
+        $obj->titulo = self::campoPost('titulo', 5, 50);
+        $obj->subtitulo = self::campoPost('subtitulo', 0, 80);
+        $obj->descricao = self::campoPost('descricao', 1, 65535);
+        $status = self::campoPost('status', 1, 1);
+        if (!in_array($status, ['0', '1'], true)) {
+            throw new InvalidArgumentException('Status da notícia inválido.');
+        }
+        $obj->status = $status === '1';
+        $imagemAnterior = $obj->imagem;
+        $imagemNova = null;
+        try {
+            if (isset($_FILES['imagem']) && ($_FILES['imagem']['error'] ?? null) !== UPLOAD_ERR_NO_FILE) {
+                $imagemNova = self::adicionarFoto($_FILES['imagem'], View::$uploadImagemNoticia, (string)$obj->id);
+                $obj->imagem = $imagemNova;
+            }
+            if (!$obj->update()) {
+                throw new \RuntimeException('Falha ao atualizar notícia.');
+            }
+        } catch (Throwable $e) {
+            self::removerFoto($imagemNova);
+            throw $e;
+        }
+        if ($imagemNova !== null) {
+            self::removerFoto($imagemAnterior);
+        }
+        LogController::registrar('noticia_alterada', 'sucesso', 'noticia', $obj->id);
+        new Flash_msg(202)->flashMsg();
+        header('Location: /painel/noticia');
+        exit;
     }
 
-    public static function painelNoticia()
+    public static function delete(): void
     {
-        LoginController::logadoRedirect("/painel/noticia");
-        LoginController::verificarAcesso((object)$_SESSION,1);
-        
-        $consulta = new Noticia()->noticia_autor_all();
-        $model = [
-            "noticias" => $consulta
-        ];
-        new View("Painel Gerenciamento Notícia!", View::$nav_footer, View::$dinamicoPaineis . "painel_noticia.php", $model)->renderizar();
+        LoginController::logadoRedirect('/painel/noticia');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $obj = new Noticia();
+        $obj->id = self::idRequisicao();
+        $obj = $obj->get();
+        self::autorizarPublicacao($obj);
+        $ok = $obj->delete();
+        if ($ok) {
+            self::removerFoto($obj->imagem);
+        }
+        LogController::registrar('noticia_excluida', $ok ? 'sucesso' : 'falha', 'noticia', $obj->id);
+        new Flash_msg($ok ? 203 : 501)->flashMsg();
+        header('Location: /painel/noticia');
+        exit;
     }
 
-
+    public static function painelNoticia(): void
+    {
+        LoginController::logadoRedirect('/painel/noticia');
+        self::verificarAcesso((object)$_SESSION, 1);
+        $noticias = array_values(array_filter(new Noticia()->noticia_autor_all() ?: [], static fn($noticia) => self::podeGerenciarPublicacao($noticia)));
+        new View('Gerenciar notícias', View::$nav_footer, View::$dinamicoPaineis . 'painel_noticia.php', ['noticias' => $noticias])->renderizar();
+    }
 }

@@ -3,7 +3,7 @@
 namespace DAOs\aluno;
 
 use model\aluno\Aluno;
-use DAOS\DAO;
+use DAOs\DAO;
 use \PDO;
 use Throwable;
 
@@ -57,7 +57,7 @@ class AlunoDAO extends DAO
         $model = $stmt->fetchObject(Aluno::class);
         return ($model !== false) ? $model : false;
         }catch (Throwable $e){
-            return false;
+            throw $e;
         }
     }
     public function get(): array

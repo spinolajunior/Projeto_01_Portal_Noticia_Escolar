@@ -34,12 +34,12 @@ class EventoDAO extends DAO
 
             return ($stmt->execute()) ? $this->getById((int)$this->pdo->lastInsertId()) : false;
         } catch (Throwable $e) {
-            return false;
+            throw $e;
         }
     }
     public function get(): array|bool
     {
-        $query = ("SELECT * FROM evento ;");
+        $query = ("SELECT * FROM evento ORDER BY data_evento ASC, id DESC;");
         $stmt = $this->pdo->prepare($query);
         return ($stmt->execute()) ? $stmt->fetchAll(PDO::FETCH_CLASS, Evento::class) : false;
     }
