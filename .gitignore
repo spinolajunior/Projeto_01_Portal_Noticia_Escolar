@@ -13,3 +13,15 @@ __pycache__/
 !/application/view/img/upload/perfil_usuario/
 /application/view/img/upload/perfil_usuario/*
 !/application/view/img/upload/perfil_usuario/user_def.jpg
+
+# Materiais de apoio locais que não fazem parte da aplicação publicada.
+/tests/
+/docs/
+/deploy/
+/database/
+/scripts/
+/output/
+/tmp/
+/README.md
+/img_conceito/
+/modelagem_banco/
